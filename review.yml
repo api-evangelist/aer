@@ -1,0 +1,507 @@
+aid: aer
+name: Australian Energy Regulator
+review:
+  question: Does the Australian Energy Regulator expose a documented public API, and
+    is the Consumer Data Right energy mandate that applies to it actually implemented
+    or only claimed?
+  answer: true
+  date: '2026-07-27'
+  reviewer: API Evangelist
+  homeMarket: Australia
+  tier: regulator
+  summary: |
+    Yes, and it is verified rather than claimed. The AER is a designated data holder
+    under the Competition and Consumer (Consumer Data Right) Rules 2020 and it
+    actually serves the Consumer Data Standards energy Product Reference Data
+    endpoints. Live anonymous calls returned HTTP 200 with real plan data on
+    2026-07-27. The stronger finding is structural: 79 of the 84 energy data-holder
+    brands listed in the ACCC CDR Register point their productBaseUri at the AER's
+    own host, cdr.energymadeeasy.gov.au. The regulator is not merely compliant with
+    the mandate it helps administer — it operates the product-data API layer for
+    nearly the entire Australian retail energy industry. Consumer usage and billing
+    data is a different matter entirely and does not live here.
+
+mandate:
+  regime: cdr-energy
+  status: live-implemented
+  appliesToThisOrganization: true
+  instrument: |
+    Competition and Consumer (Consumer Data Right) Rules 2020 made under Part IVD of
+    the Competition and Consumer Act 2010, as extended to the energy sector. Treasury
+    designates, the ACCC regulates and operates the CDR Register, the Data Standards
+    Body publishes the binding Consumer Data Standards, and the OAIC covers privacy.
+    The AER's own page states it plainly: "The AER is a designated data holder under
+    Competition and Consumer (Consumer Data Right) Rules 2020."
+  whatItRequires: |
+    Designated energy data holders must expose consumer data and product reference
+    data through endpoints conformant with the Consumer Data Standards. Product
+    Reference Data endpoints are public and unauthenticated by design. Consumer data
+    endpoints require an ACCC-accredited data recipient, consumer consent, and the
+    Consumer Data Standards information security profile. The AER's specific role is
+    as the holder of generic retail plan data — the same dataset that powers Energy
+    Made Easy and Victoria Energy Compare.
+  howVerified: |
+    NOT verified from a press release or a compliance page. Verified by calling the
+    endpoints anonymously and by cross-checking the ACCC's own register:
+
+    1. GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?type=ALL&page-size=3
+       with header "x-v: 1" returned HTTP 200, content-type application/json,
+       meta.totalRecords 1343, real AGL plan objects with planId, fuelType,
+       brandName, geography.distributors and includedPostcodes. Response headers
+       included x-v: 1, x-fapi-interaction-id and access-control-allow-origin: *.
+    2. GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans/AGL1067320MRE2@EME
+       returned 406 for x-v 1, 2 and 4, and HTTP 200 for x-v 3 — matching the AER's
+       documented statement that Get Generic Plan Detail version 2 was retired on
+       3 March 2025 and version 3 is current.
+    3. Omitting the x-v header returned HTTP 400 with the CDS error code
+       urn:au-cds:error:cds-all:Header/Missing. page-size=1001 returned HTTP 400 with
+       urn:au-cds:error:cds-all:Field/InvalidPageSize. Those are Consumer Data
+       Standards error payloads, not generic gateway errors — evidence of genuine
+       standards conformance rather than a lookalike endpoint.
+    4. GET https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+       (ACCC-operated CDR Register) returned HTTP 200 anonymously for x-v 1 and 2,
+       listing 84 energy data-holder brands. 79 of them carry a productBaseUri on
+       https://cdr.energymadeeasy.gov.au (e.g. AGL -> /agl, Origin Energy -> /origin,
+       EnergyAustralia -> /energyaustralia, Aurora Energy -> /aurora, ENGIE ->
+       /engie, Powershop -> /powershop). Exactly one brand self-hosts product data
+       (Cooperative Power -> https://public.cdr.cooperativepower.org.au) and 4 carry
+       no productBaseUri.
+    5. Brand path segments are real routing, not decoration: /agl returned 1,343
+       plans, /energy-locals 308, /ergon 36, while /generic, /zzznotreal and
+       /origin-energy returned HTTP 200 with totalRecords 0.
+    6. The AER's documentation page https://www.aer.gov.au/energy-product-reference-data
+       returned HTTP 200 and names both operations, the version policy, the 1000
+       record ceiling, the x-v and x-min-v headers, the per-retailer restriction and
+       the cdr-support@aer.gov.au contact.
+  registerEvidence:
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+    httpStatus: 200
+    headers: 'x-v: 1 and x-v: 2 both 200; x-v: 3 returns 406'
+    anonymous: true
+    date: '2026-07-27'
+    brandsTotal: 84
+    brandsWithProductBaseUriOnAerHost: 79
+    brandsSelfHostingProductData: 1
+    brandsWithNoProductBaseUri: 4
+    note: |
+      The AER does not appear as a data-holder brand itself; no register entry
+      contains "AER" or "Regulator" in brandName. Its role is as the host and holder
+      of the generic plan dataset that the retailer brands' productBaseUri values
+      resolve to.
+  notAnImplementationCheck: |
+    The distinction this study exists to make was applied here and the AER passed it.
+    A designation notice, an FAQ saying "our APIs are public", or an ACCC register
+    row would each have been a claim only. What raises this to live-implemented is
+    that anonymous HTTP calls to the AER's host returned standards-shaped payloads
+    and standards-shaped errors, and that the ACCC's independently operated register
+    resolves 79 retailer brands to that same AER host.
+  transplantFinding: |
+    This is the control case for the series: the identical statutory machinery that
+    produced Australia's byte-for-byte fifty-bank banking contract — Part IVD, the
+    ACCC, the Data Standards Body — was transplanted into energy, and it produced a
+    working, uniform, anonymously callable product-data contract. But the transplant
+    did not land the same way. In banking each bank stands up and operates its own
+    conformant endpoint. In energy the regulator absorbed that burden: 94 percent of
+    registered energy brands do not run a product API at all, they point at the
+    AER's. The mandate replicated; the distributed implementation did not. What was
+    fifty independent implementations in banking is one implementation in energy,
+    wearing 79 hostnames.
+
+dataStandard:
+  implemented: true
+  value: CDR Consumer Data Standards (energy) - CDR Energy API v1.36.0, Get Generic
+    Plans (x-v 1) and Get Generic Plan Detail (x-v 3)
+  standardsBody: Data Standards Body (dsb.gov.au), binding under the Consumer Data
+    Right regime
+  detail: |
+    The AER implements the Energy Plans portion of the CDR Energy API. Field shapes
+    are not the AER's to choose — its own FAQ states "There are no unique or variable
+    fields. The fields are governed by the Consumer Data Standards (CDS). The AER and
+    the Energy Retailers comply with these fields," and directs field change requests
+    to the Data Standards Body change process rather than to itself. Base path shape
+    is the CDS-mandated https://<holder-path>/cds-au/<version>/<industry>.
+    No Green Button / ESPI, IEEE 2030.5, OpenADR, OCPP/OCPI or IEC CIM 61968/61970
+    reference was found anywhere in the AER's surface — unsurprising, since CDR is
+    Australia's answer to the same problem those standards address elsewhere.
+  harvestedSpec:
+    file: openapi/cdr-energy-api-openapi.json
+    sourceURL: https://raw.githubusercontent.com/ConsumerDataStandardsAustralia/standards/master/swagger-gen/api/cds_energy.json
+    httpStatus: 200
+    fetchedDate: '2026-07-27'
+    bytes: 286001
+    openapi: 3.0.3
+    title: CDR Energy API
+    version: 1.36.0
+    parses: true
+    pathsTotal: 18
+    provenance: |
+      IMPORTANT — this specification is AUTHORED BY THE DATA STANDARDS BODY, not by
+      the AER. It is saved here verbatim and unmodified because it is the actual
+      contract the AER serves, and because no AER-published OpenAPI exists:
+      https://cdr.energymadeeasy.gov.au/openapi.json and /swagger.json both return
+      404, and www.aer.gov.au/openapi.json, /swagger.json and /api-docs all return
+      404. Do not credit this artifact to the AER as a provider-published
+      specification.
+    aerImplementsOnly:
+    - GET /energy/plans (listEnergyPlans, "Get Generic Plans")
+    - GET /energy/plans/{planId} (getEnergyPlanDetail, "Get Generic Plan Detail")
+    aerDoesNotImplement: |
+      The remaining 16 paths in the specification — /energy/accounts and its balance,
+      billing, invoice, concession and payment-schedule children, plus
+      /energy/electricity/servicepoints, its usage endpoints and its distributed
+      energy resource endpoints — are consumer data endpoints held by retailers and
+      AEMO. Confirmed negative on the AER host:
+      GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/accounts returned
+      HTTP 404 on 2026-07-27.
+    notHarvested: |
+      cds_energy_sdh.json (the Secondary Data Holder specification, 84,260 bytes) was
+      seen in the same directory but not saved here — it describes AEMO's gateway
+      obligations, not the AER's.
+
+consumerVsMarketData:
+  consumer_data_api: false
+  market_data_open: true
+  split: |
+    The AER is the mirror image of the usual utility. It is wide open on product data
+    and holds nothing at all on the consumer side.
+
+    OPEN — product and tariff reference data. Every current, generally available
+    retail electricity and gas plan for the six National Energy Customer Framework
+    jurisdictions (Tasmania, Victoria, South Australia, the ACT, New South Wales and
+    Queensland), including tariffs, metering charges, contract terms, incentives,
+    discounts, fees, solar feed-in and eligibility, retrievable anonymously in JSON
+    with CORS wide open (access-control-allow-origin: *), no key, no signup, no
+    accreditation, up to 1000 records per call. Western Australia and the Northern
+    Territory are out of scope because they have not adopted the NECF — the AER's own
+    FAQ says so and refers callers to the state regulator.
+
+    CLOSED — and correctly so, because the AER does not hold it. There is no AER API
+    for an individual customer's usage, interval, billing or account data. Those
+    endpoints exist in the standard but 404 on the AER's host. In the CDR energy
+    design retailers are the primary data holders and AEMO is the secondary data
+    holder operating the gateway for standardised NMI and metering data; obtaining
+    consumer data requires ACCC accreditation as a data recipient plus the consumer's
+    consent. So consumer_data_api is false for THIS organization and that is not a
+    gap in the AER — it is the architecture.
+
+    NOT AN API — wholesale and system data. The AER's market statistics
+    (https://www.aer.gov.au/industry/registers/charts, HTTP 200) and wholesale
+    performance reporting (https://www.aer.gov.au/industry/wholesale/performance,
+    HTTP 200) are published as chart pages and downloadable data tables and PDFs
+    updated quarterly, with retail performance data available on request to
+    marketperformance@aer.gov.au. No API, no CSV endpoint, no CKAN or Socrata portal;
+    the AER is not a publishing organization on data.gov.au (package_search for
+    organization:australian-energy-regulator returned count 0, HTTP 200). Genuine
+    Australian grid and NEM system data lives at AEMO, not here.
+
+    market_data_open is recorded true on the strength of the retail product/tariff
+    data being genuinely open, anonymous, machine-readable and industry-wide. It is
+    NOT true of wholesale or system data, which is spreadsheet-and-PDF only.
+
+accessGate:
+  gate: self-serve
+  gated: false
+  whatADeveloperMustDo: |
+    Nothing. There is no portal to register on, no key to request, no application
+    form, no licence to accept and no accreditation to obtain. A developer picks a
+    retailer's path segment from the AER's published list of CDR energy base URIs
+    (or, better, reads productBaseUri straight out of the ACCC CDR Register API),
+    sends GET {baseUri}/cds-au/v1/energy/plans with the header x-v: 1, and gets JSON.
+    The only real friction is documented and structural: one call per retailer brand
+    because there is no Australia-wide query, current plans only because future and
+    historical plans are not exposed, and no dynamic retailer list in JSON — the AER
+    FAQ says "Currently no, but we are working on providing this in JSON format",
+    which is why the ACCC register is the practical way to enumerate base URIs.
+    Support is a mailbox, cdr-support@aer.gov.au, not a developer console.
+  contrastWithConsumerData: |
+    To get an individual consumer's energy data instead, a developer must become an
+    ACCC-accredited data recipient (https://www.cdr.gov.au/for-providers/become-accredited-data-recipient),
+    stand up a CDS-conformant client with mTLS and OIDC, and obtain the consumer's
+    consent — a months-long regulated onboarding. Same statutory regime, two
+    completely different front doors.
+
+authModel:
+  scheme: none for product reference data
+  detail: |
+    The AER's Product Reference Data endpoints are unauthenticated by design under
+    the Consumer Data Standards — the harvested specification carries no security
+    requirement on GET /energy/plans or GET /energy/plans/{planId}. What IS required
+    is protocol discipline rather than credentials:
+      - x-v request header is mandatory; omitting it returns HTTP 400 with
+        urn:au-cds:error:cds-all:Header/Missing.
+      - Version negotiation is strict: Get Generic Plans supports x-v 1 only,
+        Get Generic Plan Detail supports x-v 3 only; anything else returns 406.
+      - x-min-v is supported for version-range negotiation per the standards.
+      - Responses echo x-fapi-interaction-id, the FAPI correlation header.
+    No OpenID configuration is served: https://cdr.energymadeeasy.gov.au/.well-known/openid-configuration
+    and https://www.energymadeeasy.gov.au/.well-known/openid-configuration and
+    https://www.aer.gov.au/.well-known/openid-configuration all returned 404 on
+    2026-07-27 — expected, because the authenticated CDR surface belongs to retailers
+    and AEMO, not to the AER. For that surface the Consumer Data Standards require
+    OAuth2/OpenID Connect with mTLS-bound client authentication and ACCC accreditation.
+
+probes:
+  date: '2026-07-27'
+  method: |
+    curl -s with explicit status capture, redirects followed, x-v headers where the
+    Consumer Data Standards require them. www.aer.gov.au is fronted by Akamai
+    (www.aer.gov.au -> www.aer.gov.au.edgekey.net -> e254931.dscb.akamaiedge.net) and
+    refused to return any HTTP response to this probe host — TLS handshake completed
+    and the certificate verified, then the connection timed out with 0 bytes, and
+    direct WebFetch attempts also timed out. aer.gov.au pages were therefore probed
+    and read through the r.jina.ai text proxy, which passes the origin status through
+    (it correctly reported "Target URL returned error 404" for known-bad paths). Those
+    statuses are marked viaTextProxy below and should be read as origin statuses
+    observed indirectly, not as direct 200s from this host.
+  results:
+  - url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?type=ALL&page-size=3
+    status: 200
+    direct: true
+    note: 'header x-v: 1; 1,343 AGL plans; CORS access-control-allow-origin: *'
+  - url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans (no x-v header)
+    status: 400
+    direct: true
+    note: urn:au-cds:error:cds-all:Header/Missing
+  - url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?page-size=1001
+    status: 400
+    direct: true
+    note: urn:au-cds:error:cds-all:Field/InvalidPageSize
+  - url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans/AGL1067320MRE2@EME
+    status: 200
+    direct: true
+    note: 'header x-v: 3 only; x-v 1, 2 and 4 each returned 406'
+  - url: https://cdr.energymadeeasy.gov.au/energy-locals/cds-au/v1/energy/plans
+    status: 200
+    direct: true
+    note: 308 plans
+  - url: https://cdr.energymadeeasy.gov.au/ergon/cds-au/v1/energy/plans
+    status: 200
+    direct: true
+    note: 36 plans
+  - url: https://cdr.energymadeeasy.gov.au/zzznotreal/cds-au/v1/energy/plans
+    status: 200
+    direct: true
+    note: totalRecords 0 — unknown brands return an empty set rather than 404
+  - url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/accounts
+    status: 404
+    direct: true
+    note: AER hosts no consumer data endpoints
+  - url: https://cdr.energymadeeasy.gov.au/
+    status: 404
+    direct: true
+  - url: https://cdr.energymadeeasy.gov.au/openapi.json
+    status: 404
+    direct: true
+  - url: https://cdr.energymadeeasy.gov.au/swagger.json
+    status: 404
+    direct: true
+  - url: https://cdr.energymadeeasy.gov.au/.well-known/openid-configuration
+    status: 404
+    direct: true
+  - url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+    status: 200
+    direct: true
+    note: ACCC register; 84 energy brands; 79 productBaseUri on the AER host
+  - url: https://www.energymadeeasy.gov.au/
+    status: 200
+    direct: true
+    note: AER-operated consumer price comparison service
+  - url: https://www.energymadeeasy.gov.au/robots.txt
+    status: 404
+    direct: true
+  - url: https://api.energymadeeasy.gov.au/reference-data
+    status: 403
+    direct: true
+    note: private backend for the Energy Made Easy site; not documented, not listed
+      as an API
+  - url: https://developer.energymadeeasy.gov.au/
+    status: 000
+    direct: true
+    note: DNS does not resolve
+  - url: https://raw.githubusercontent.com/ConsumerDataStandardsAustralia/standards/master/swagger-gen/api/cds_energy.json
+    status: 200
+    direct: true
+    note: harvested to openapi/cdr-energy-api-openapi.json
+  - url: https://consumerdatastandardsaustralia.github.io/standards/
+    status: 200
+    direct: true
+  - url: https://data.gov.au/data/api/3/action/package_search?q=organization:australian-energy-regulator
+    status: 200
+    direct: true
+    note: count 0 — AER publishes no datasets on data.gov.au
+  - url: https://api.github.com/orgs/AustralianEnergyRegulator
+    status: 404
+    direct: true
+    note: no AER GitHub organization found
+  - url: https://www.aer.gov.au/
+    status: 000
+    direct: true
+    note: Akamai-fronted; TLS verified then no HTTP response to this probe host
+  - url: https://aer.gov.au/
+    status: 301
+    direct: true
+    note: apex redirects to www
+  - url: https://developer.aer.gov.au/
+    status: 000
+    note: DNS NXDOMAIN
+  - url: https://developers.aer.gov.au/
+    status: 000
+    note: DNS NXDOMAIN
+  - url: https://api.aer.gov.au/
+    status: 000
+    note: DNS NXDOMAIN
+  - url: https://docs.aer.gov.au/
+    status: 000
+    note: DNS NXDOMAIN
+  - url: https://data.aer.gov.au/
+    status: 000
+    note: DNS NXDOMAIN
+  - url: https://www.aer.gov.au/energy-product-reference-data
+    status: 200
+    viaTextProxy: true
+    note: the AER's real developer documentation page — operations, versions, headers,
+      limits, FAQs
+  - url: https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/industry/registers
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/industry/registers/authorisations
+    status: 200
+    viaTextProxy: true
+    note: public register of authorised retailers — HTML, no API
+  - url: https://www.aer.gov.au/industry/registers/charts
+    status: 200
+    viaTextProxy: true
+    note: market statistics charts and data tables — downloads, no API
+  - url: https://www.aer.gov.au/industry/wholesale/performance
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/about/strategic-initiatives/energy-made-easy
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/developers
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/api
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/docs
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/data
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/openapi.json
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/swagger.json
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/api-docs
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/jsonapi
+    status: 403
+    viaTextProxy: true
+    note: Drupal JSON:API path present but forbidden; no machine-readable content
+      obtainable
+  - url: https://www.aer.gov.au/.well-known/openid-configuration
+    status: 404
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/robots.txt
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/sitemap.xml
+    status: 200
+    viaTextProxy: true
+  - url: https://www.aer.gov.au/rss.xml
+    status: 200
+    viaTextProxy: true
+    note: returned feed title "Australian Energy Regulator (AER)"; the proxy rendered
+      no item list, so treat as a site feed of unverified depth
+
+findings:
+  developerPortal: https://www.aer.gov.au/energy-product-reference-data
+  developerPortalConfirmed: true
+  developerPortalNote: |
+    Confirmed as a real, self-serve public documentation surface, not a customer
+    login. It is a documentation PAGE on the main Drupal site rather than a developer
+    portal product — there is no console, no key management, no interactive try-it,
+    no changelog feed and no SDKs — but it names the operations, the supported
+    versions, the required headers, the paging limits and the support mailbox, and
+    the endpoints it documents answer anonymously. Origin status observed as 200 via
+    text proxy because Akamai blocked direct access from this probe host.
+  openapiHarvested: true
+  specsCount: 1
+  apisListed: 2
+  regulatorPublishesBetterThanIndustry: true
+  regulatorNote: |
+    Yes, and here it is not a figure of speech. This series keeps finding regulators
+    out-publishing the industry they supervise; the AER is the extreme version — it
+    does not merely publish better than the retailers, it publishes FOR them. 79 of
+    84 registered energy data-holder brands do not operate a product API at all; the
+    ACCC register points third parties at the AER's own host. The AER also
+    out-publishes its sibling institutions: AEMC (the rule maker) ships nothing
+    machine-readable, while the AER ships a live, standards-conformant, anonymously
+    callable API covering the entire NECF retail market.
+  caveats: |
+    - The open surface is product data only; the AER holds no consumer usage data and
+      should never be credited with a consumer-data implementation.
+    - No Australia-wide query exists; enumeration requires the ACCC register or the
+      AER's published base URI document.
+    - The harvested OpenAPI is the Data Standards Body's, not the AER's; the AER
+      publishes no specification of its own.
+    - Direct HTTP access to www.aer.gov.au was blocked for this probe host, so all
+      aer.gov.au statuses are indirect.
+
+sources:
+- url: https://www.aer.gov.au/energy-product-reference-data
+  type: Documentation
+  note: 'AER states: designated data holder under the CDR Rules 2020; "You can access
+    up-to-date energy plan data with no accreditation required"; documents Get Generic
+    Plans and Get Generic Plan Detail, version 3 for detail after version 2 retired
+    3 March 2025, x-v and x-min-v headers, 1000-record ceiling, 25-record default page,
+    per-retailer restriction, no Australia-wide API, NECF jurisdictions only,
+    cdr-support@aer.gov.au.'
+- url: https://consumerdatastandardsaustralia.github.io/standards/
+  type: Specification
+  note: Consumer Data Standards including the energy schemas; the binding contract
+    the AER serves. Maintained by the Data Standards Body.
+- url: https://raw.githubusercontent.com/ConsumerDataStandardsAustralia/standards/master/swagger-gen/api/cds_energy.json
+  type: OpenAPI
+  note: CDR Energy API 1.36.0, OpenAPI 3.0.3, 18 paths; harvested verbatim to
+    openapi/cdr-energy-api-openapi.json.
+- url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  type: Registry
+  note: ACCC CDR Register; the independent verification path for any energy CDR claim.
+    84 brands, 79 with productBaseUri on cdr.energymadeeasy.gov.au.
+- url: https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  type: Documentation
+  note: AER's published list of CDR energy retailer base URIs and brands.
+- url: https://www.energymadeeasy.gov.au/frequently-asked-questions/how-can-i-get-access-to-the-energy-made-easy-plan-data
+  type: Documentation
+  note: 'AER-operated Energy Made Easy FAQ: plan data is available only through the
+    CDR APIs, not by any file-based delivery, due to National Energy Retail Law.'
+- url: https://www.cdr.gov.au/for-providers/become-accredited-data-recipient
+  type: Regulation
+  note: The accreditation path required for consumer data — the other, gated front
+    door of the same regime.
+- url: https://www.aer.gov.au/industry/registers/charts
+  type: DataPortal
+  note: Market statistics as charts and downloadable data tables; no API.
+
+actions:
+  apisYmlCreated: true
+  apisListed: 2
+  openapiDirectory: openapi/ — one specification, harvested verbatim, DSB-authored
+  reason: |
+    Two APIs are listed because the AER documents exactly two operations and both
+    were called successfully and anonymously. Nothing was invented: no consumer-data
+    endpoint, no wholesale data API, and no AER-authored specification is claimed.
+    The private Energy Made Easy backend at api.energymadeeasy.gov.au (HTTP 403) was
+    deliberately NOT listed as an API because it is undocumented and inaccessible.
