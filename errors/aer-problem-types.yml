@@ -1,0 +1,77 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  live error responses from https://cdr.energymadeeasy.gov.au on 2026-07-27, the
+  ResponseErrorListV2 schema in openapi/cdr-energy-api-openapi.json, and the Consumer
+  Data Standards error-code registry
+docs: https://consumerdatastandardsaustralia.github.io/standards/#error-codes
+format: cds-error-list
+rfc9457: false
+envelope:
+  content_type: application/json
+  shape: '{ "errors": [ { "code", "title", "detail", "meta"? } ] }'
+  schema: openapi/cdr-energy-api-openapi.json#/components/schemas/ResponseErrorListV2
+  detail: >-
+    The Consumer Data Standards predate and do not use RFC 9457 problem+json. Errors
+    come back as a list under "errors", each carrying a URN code from the
+    urn:au-cds:error: namespace, a human title and a detail string. The URN — not the
+    HTTP status — is the stable machine identifier to branch on.
+problems:
+- status: 400
+  code: urn:au-cds:error:cds-all:Header/Missing
+  title: Missing Required Header
+  detail_observed: Header x-v must be provided
+  cause: The mandatory x-v version header was omitted.
+  remediation: Send x-v with the version the operation supports (1 for Get Generic Plans, 3 for Get Generic Plan Detail).
+  verified: '2026-07-27'
+  source_operation: openapi/cdr-energy-api-openapi.json#listEnergyPlans
+- status: 400
+  code: urn:au-cds:error:cds-all:Field/InvalidPageSize
+  title: Invalid Page Size
+  detail_observed: Field page-size cannot be more than 1000 [page-size=1001]
+  cause: page-size above the CDS ceiling of 1000.
+  remediation: Request 1000 or fewer records per page and follow links.next.
+  verified: '2026-07-27'
+  source_operation: openapi/cdr-energy-api-openapi.json#listEnergyPlans
+- status: 406
+  code: urn:au-cds:error:cds-all:Header/UnsupportedVersion
+  title: Unsupported Version
+  detail_observed: Header x-v greater than maximum supported [x-v=9, max=1]
+  cause: >-
+    x-v names a version this operation does not serve. Get Generic Plans supports
+    version 1 only; Get Generic Plan Detail supports version 3 only (version 2 was
+    retired 3 March 2025).
+  remediation: >-
+    Use the exact supported version, or send x-min-v alongside a higher x-v to let the
+    server negotiate down.
+  verified: '2026-07-27'
+  source_operation: openapi/cdr-energy-api-openapi.json#getEnergyPlanDetail
+- status: 404
+  code: urn:au-cds:error:cds-all:Resource/NotFound
+  title: Resource Not Found
+  cause: >-
+    Unknown planId, or a path the AER does not serve. Every consumer-data path in the
+    specification (/energy/accounts*, /energy/electricity/servicepoints*) returns this
+    on the AER host because the AER is not the data holder for consumer data.
+  remediation: >-
+    Check the planId against a Get Generic Plans response for the same brand. For
+    consumer data, go to the retailer as primary data holder via ACCC accreditation.
+  verified: '2026-07-27'
+  source_operation: openapi/cdr-energy-api-openapi.json#getEnergyPlanDetail
+- status: 422
+  code: urn:au-cds:error:cds-all:Field/Invalid
+  title: Invalid Field
+  cause: Declared in the specification for Get Generic Plans; a field value fails CDS validation.
+  remediation: Correct the query parameter value against the allowed CDS enumerations.
+  verified: null
+  note: Declared in the harvested specification; not reproduced against the live host.
+  source_operation: openapi/cdr-energy-api-openapi.json#listEnergyPlans
+non_errors:
+- condition: unknown brand path segment
+  status: 200
+  detail: >-
+    A brand segment that does not exist (e.g. /zzznotreal/) returns HTTP 200 with
+    meta.totalRecords 0 rather than 404. Treat an empty plan list as "possibly wrong
+    brand" and validate the segment against the ACCC CDR Register productBaseUri.
+  verified: '2026-07-27'
+support: cdr-support@aer.gov.au

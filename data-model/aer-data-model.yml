@@ -1,0 +1,138 @@
+generated: '2026-07-27'
+method: derived
+source: openapi/cdr-energy-api-openapi.json (schema $ref graph, walked from the two responses the AER serves)
+docs: https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api
+summary: >-
+  The AER's public data model is a single entity — the energy plan — in two
+  projections. The summary projection (EnergyPlan) is what Get Generic Plans returns;
+  the full projection (EnergyPlanDetailV3) embeds the summary plus the whole contract
+  tree. There are no cross-entity foreign keys and no consumer entities: accounts,
+  service points, usage and customers exist in the specification but not on this host.
+identifiers:
+- field: planId
+  entity: EnergyPlan
+  format: >-
+    Opaque retailer-assigned string. Observed values carry a retailer prefix and an
+    @EME suffix, e.g. AGL1067320MRE2@EME. The AER states plan values are permanently
+    fixed and that a revised plan appears either as an incremented trailing version
+    digit or as an entirely new planId.
+  stable: true
+- field: brand
+  entity: EnergyPlan
+  format: >-
+    Lowercase retailer brand key that also serves as the base-URI path segment (agl,
+    origin, energyaustralia, ...). Resolve it from the ACCC CDR Register
+    productBaseUri rather than hard-coding.
+entities:
+- name: EnergyPlan
+  role: summary projection
+  returned_by: [listEnergyPlans]
+  observed_fields: [type, brand, planId, fuelType, brandName, geography, displayName, lastUpdated, customerType, effectiveFrom]
+  note: geography carries distributors[], includedPostcodes[] and optionally excludedPostcodes[].
+- name: EnergyPlanDetailV3
+  role: full projection
+  returned_by: [getEnergyPlanDetail]
+- name: EnergyPlanContractFullV3
+  role: the contract terms of a plan
+- name: EnergyPlanContractV3
+  role: shared contract body
+- name: EnergyPlanTariffPeriodV2
+- name: EnergyPlanControlledLoadV2
+- name: EnergyPlanSolarFeedInTariffV3
+- name: EnergyPlanDiscounts
+- name: EnergyPlanIncentives
+- name: EnergyPlanFees
+- name: EnergyPlanEligibility
+- name: EnergyPlanGreenPowerCharges
+- name: EnergyPlanId
+- name: EnergyDaysEnum
+  role: enumeration
+- name: MeasureUnitEnum
+  role: enumeration
+relationships:
+- from: EnergyPlanListResponse
+  to: EnergyPlan
+  type: has_many
+  via: data.plans
+- from: EnergyPlanListResponse
+  to: MetaPaginated
+  type: has_one
+  via: meta
+- from: EnergyPlanListResponse
+  to: LinksPaginated
+  type: has_one
+  via: links
+- from: EnergyPlanResponseV3
+  to: EnergyPlanDetailV3
+  type: has_one
+  via: data
+- from: EnergyPlanDetailV3
+  to: EnergyPlan
+  type: has_one
+  via: allOf (embeds the summary projection)
+- from: EnergyPlanDetailV3
+  to: EnergyPlanContractFullV3
+  type: has_one
+  via: electricityContract / gasContract
+- from: EnergyPlanContractFullV3
+  to: EnergyPlanContractV3
+  type: has_one
+  via: allOf
+- from: EnergyPlanContractV3
+  to: EnergyPlanTariffPeriodV2
+  type: has_many
+  via: tariffPeriod
+- from: EnergyPlanContractV3
+  to: EnergyPlanControlledLoadV2
+  type: has_many
+  via: controlledLoad
+- from: EnergyPlanContractV3
+  to: EnergyPlanSolarFeedInTariffV3
+  type: has_many
+  via: solarFeedInTariff
+- from: EnergyPlanContractV3
+  to: EnergyPlanDiscounts
+  type: has_many
+  via: discounts
+- from: EnergyPlanContractV3
+  to: EnergyPlanIncentives
+  type: has_many
+  via: incentives
+- from: EnergyPlanContractV3
+  to: EnergyPlanFees
+  type: has_many
+  via: fees
+- from: EnergyPlanContractV3
+  to: EnergyPlanEligibility
+  type: has_many
+  via: eligibility
+- from: EnergyPlanContractV3
+  to: EnergyPlanGreenPowerCharges
+  type: has_many
+  via: greenPowerCharges
+- from: EnergyPlan
+  to: EnergyPlanId
+  type: has_one
+  via: planId
+- from: EnergyPlanTariffPeriodV2
+  to: EnergyDaysEnum
+  type: has_many
+  via: timeOfUseRates[].timeOfUse[].days and demandCharges[].days
+- from: EnergyPlanTariffPeriodV2
+  to: MeasureUnitEnum
+  type: has_one
+  via: rate measureUnit (singleRate, timeOfUseRates and demandCharges rate objects)
+optional_fields:
+  detail: >-
+    The AER states optional fields are retailer discretion — excluded postcodes,
+    controlled load, demand charges, discounts and additional information may be absent
+    from a valid plan. Controlled load applies to electricity only. Banded daily supply
+    charges appear only on selected Queensland plans. Demand charges apply only to
+    electricity customers with smart meters. Consumers must therefore treat absence as
+    "not offered", not as "missing data".
+  source: https://www.aer.gov.au/energy-product-reference-data
+not_present_on_this_host:
+  entities: [EnergyAccount, EnergyBalance, EnergyInvoice, EnergyBilling, EnergyConcession, EnergyPaymentSchedule, EnergyServicePoint, EnergyUsageRead, EnergyDerRecord, CommonCustomer]
+  reason: >-
+    Consumer-side entities held by retailers (primary data holders) and AEMO (secondary
+    data holder). Their paths return 404 on the AER host.

@@ -1,0 +1,57 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the AER's implementation of the CDR Common API
+  version: 1.0.0
+extends: openapi/cds-common-api-openapi.json
+x-generated: '2026-07-27'
+x-method: generated
+x-source: Live probes of https://cdr.energymadeeasy.gov.au on 2026-07-27
+actions:
+- target: $.info
+  update:
+    x-apievangelist-provider: Australian Energy Regulator
+    x-apievangelist-provider-slug: aer
+    x-apievangelist-spec-author: Data Standards Body (dsb.gov.au)
+    x-apievangelist-note: >-
+      The AER serves the two anonymous discovery operations of this document. The two
+      /common/customer operations are part of the authenticated CDR consumer surface
+      and are not served by the AER.
+- target: $.servers
+  update:
+  - url: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1
+    description: >-
+      AER-operated CDR host. Discovery endpoints are brand-scoped — the unbranded
+      path /cds-au/v1/discovery/status returns 404.
+    variables:
+      brand:
+        default: agl
+        description: Retailer brand path segment resolved from the ACCC CDR Register.
+- target: $.paths['/discovery/status'].get
+  update:
+    x-apievangelist-served-by-aer: true
+    x-apievangelist-supported-versions: [1]
+    x-apievangelist-verified: '2026-07-27'
+    x-apievangelist-verification: >-
+      GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status with x-v 1
+      returned HTTP 200 and {"data":{"status":"OK","updateTime":"2026-07-27T20:39:38.048Z"}}.
+      x-v 2 returned 406.
+    x-apievangelist-role: >-
+      This is the AER's status page. There is no HTML status site; poll this endpoint.
+- target: $.paths['/discovery/outages'].get
+  update:
+    x-apievangelist-served-by-aer: true
+    x-apievangelist-supported-versions: [1]
+    x-apievangelist-verified: '2026-07-27'
+    x-apievangelist-verification: >-
+      GET .../discovery/outages with x-v 1 returned HTTP 200 and {"data":{"outages":[]}}.
+    x-apievangelist-defect: >-
+      The response links.self echoed a different brand path (/1st-energy/) than the
+      brand requested. Treat links.self on this endpoint as unreliable.
+- target: $.paths['/common/customer'].get
+  update:
+    x-apievangelist-served-by-aer: false
+    x-apievangelist-note: Authenticated CDR consumer surface; not served by the AER.
+- target: $.paths['/common/customer/detail'].get
+  update:
+    x-apievangelist-served-by-aer: false
+    x-apievangelist-note: Authenticated CDR consumer surface; not served by the AER.

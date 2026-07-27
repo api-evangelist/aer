@@ -1,0 +1,22 @@
+generated: '2026-07-27'
+method: generated
+source: >-
+  openapi/cdr-energy-api-openapi.json + openapi/cds-common-api-openapi.json +
+  conventions/aer-conventions.yml + errors/aer-problem-types.yml +
+  rate-limits/aer-rate-limits.yml, grounded in live calls on 2026-07-27
+note: >-
+  The AER publishes no agent skills, AGENTS.md or llms.txt. These are generated from
+  the operations the AER genuinely serves; every operationId below exists verbatim in
+  the referenced specification.
+skills:
+- file: aer-compare-energy-plans.md
+  name: Compare Australian retail energy plans
+  api: openapi/cdr-energy-api-openapi.json
+  operations: [listEnergyPlans, getEnergyPlanDetail]
+- file: aer-sweep-national-plan-catalogue.md
+  name: Sweep the national retail energy plan catalogue
+  api: openapi/cdr-energy-api-openapi.json
+  operations: [listEnergyPlans, getEnergyPlanDetail, getStatus, getOutages]
+  also_uses:
+  - openapi/cds-common-api-openapi.json
+  - https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary

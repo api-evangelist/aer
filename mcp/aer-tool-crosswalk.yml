@@ -1,0 +1,82 @@
+generated: '2026-07-27'
+method: derived
+source: mcp/aer-mcp.yml + openapi/cdr-energy-api-openapi.json + openapi/cds-common-api-openapi.json
+status: candidate
+note: >-
+  The AER operates no MCP server and no GraphQL surface. This crosswalk binds the
+  CANDIDATE tool set in mcp/aer-mcp.yml to the real OpenAPI operations the AER serves,
+  so any tool built on top of this provider inherits a genuine inputSchema from the
+  specification instead of a guessed one. Confidence is high throughout because each
+  tool is a one-to-one wrapper of a single operation, not a composite.
+surfaces:
+  openapi:
+  - file: openapi/cdr-energy-api-openapi.json
+    title: CDR Energy API 1.36.0
+    authored_by: Data Standards Body (not the AER)
+    operations_total: 23
+    operations_served_by_aer: 2
+  - file: openapi/cds-common-api-openapi.json
+    title: CDR Common API 1.36.0
+    authored_by: Data Standards Body (not the AER)
+    operations_total: 4
+    operations_served_by_aer: 2
+  graphql: null
+  mcp:
+    url: null
+    gated: false
+    note: No MCP server published by the AER; tools/list not applicable.
+  base_url_pattern: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1
+crosswalk:
+- tool: list_energy_plans
+  category: product-reference-data
+  rest: [listEnergyPlans]
+  binding: rest
+  confidence: high
+  input_schema_source: openapi/cdr-energy-api-openapi.json#/paths/~1energy~1plans/get/parameters
+- tool: get_energy_plan_detail
+  category: product-reference-data
+  rest: [getEnergyPlanDetail]
+  binding: rest
+  confidence: high
+  input_schema_source: openapi/cdr-energy-api-openapi.json#/paths/~1energy~1plans~1{planId}/get/parameters
+- tool: get_status
+  category: discovery
+  rest: [getStatus]
+  binding: rest
+  confidence: high
+  input_schema_source: openapi/cds-common-api-openapi.json#/paths/~1discovery~1status/get
+- tool: get_outages
+  category: discovery
+  rest: [getOutages]
+  binding: rest
+  confidence: high
+  input_schema_source: openapi/cds-common-api-openapi.json#/paths/~1discovery~1outages/get
+mcp_only:
+- tool: list_energy_brands
+  reason: >-
+    No AER operation enumerates retailer brands. The AER publishes the base-URI list as
+    a document, and its FAQ confirms a JSON list does not yet exist. The tool is backed
+    by the ACCC CDR Register API (a different operator) because resolving {brand} is a
+    hard prerequisite for every other tool.
+  backing_surface: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+rest_only:
+- capability: consumer energy accounts
+  operations: [listEnergyAccounts, getEnergyAccountDetail, getEnergyAccountBalance, listEnergyAccountBalancesBulk, listEnergyAccountBalancesSpecificAccounts, getEnergyAccountInvoices, listEnergyAccountInvoicesBulk, listEnergyInvoicesForSpecificAccounts, getBillingForEnergyAccount, listEnergyAccountBillingBulk, listEnergyAccountBillingForSpecificAccounts, getEnergyAccountConcessions, getEnergyAccountPaymentSchedule]
+  reason: >-
+    Present in the specification but 404 on the AER host — retailers are the primary
+    data holders. Reaching them needs ACCC accreditation, consumer consent, OAuth2/OIDC
+    and mTLS. No tool can be built against the AER for these.
+- capability: electricity service points, usage and DER
+  operations: [listElectricityServicePoints, getElectricityServicePointDetail, getElectricityServicePointUsage, listElectricityUsageBulk, listElectricityUsageForServicePoints, getElectricityDERForServicePoint, listElectricityDERBulk, listElectricityDERForSpecificServicePoints]
+  reason: Secondary data holder surface operated by AEMO, not the AER. 404 on this host.
+- capability: common customer
+  operations: [getCustomer, getCustomerDetail]
+  reason: Authenticated CDR consumer surface; not served by the AER.
+coverage:
+  tools_named: 5
+  tools_bound_to_rest: 4
+  mcp_only: 1
+  rest_operations_total: 27
+  rest_operations_served_by_aer: 4
+  rest_operations_with_a_tool: 4
+  rest_operations_unreachable_on_this_host: 23

@@ -1,0 +1,125 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  https://www.aer.gov.au/energy-product-reference-data (Supported API Versions) +
+  Consumer Data Standards non-functional requirements and endpoint version schedule +
+  live probes on 2026-07-27
+versioning:
+  scheme: request-header
+  headers: [x-v, x-min-v]
+  current:
+  - operation: listEnergyPlans
+    label: Get Generic Plans
+    version: 1
+    only_supported: true
+  - operation: getEnergyPlanDetail
+    label: Get Generic Plan Detail
+    version: 3
+    only_supported: true
+  - operation: getStatus
+    label: Get Status
+    version: 1
+  - operation: getOutages
+    label: Get Outages
+    version: 1
+  docs: https://www.aer.gov.au/energy-product-reference-data
+  standard: https://consumerdatastandardsaustralia.github.io/standards/#versioning
+deprecation:
+  policy_url: https://consumerdatastandardsaustralia.github.io/standards/includes/endpoint-version-schedule/index.html
+  provider_notice_url: https://www.aer.gov.au/energy-product-reference-data
+  sunset_header: false
+  detail: >-
+    The deprecation policy is genuinely published, and it is stronger than most
+    commercial APIs manage — just not by the AER. The Data Standards Body maintains a
+    per-endpoint, per-version Endpoint Version Schedule with four dates for every
+    version: date introduced (and the standards release that introduced it), binding
+    date, date deprecated, and retirement date. Every energy data holder including the
+    AER is held to it, and the AER republishes the transitions that affect it under
+    "Supported API Versions" on its own documentation page. There is no RFC 8594
+    Sunset or Deprecation response header on this host — a retired version simply
+    stops being accepted and returns HTTP 406
+    urn:au-cds:error:cds-all:Header/UnsupportedVersion.
+  events:
+  - endpoint: /energy/plans/{planId}
+    version: 3
+    introduced: '2024-04-24'
+    introduced_in_standards: 1.30.0
+    binding: '2024-11-11'
+    deprecated: null
+    retired: null
+    status: current
+  - endpoint: /energy/plans/{planId}
+    version: 2
+    introduced: '2023-05-07'
+    introduced_in_standards: 1.24.0
+    binding: '2023-11-01'
+    deprecated: '2024-04-24'
+    retired: '2025-03-03'
+    status: retired
+    source: https://www.aer.gov.au/energy-product-reference-data
+  - endpoint: /energy/plans/{planId}
+    version: 1
+    introduced: '2021-10-29'
+    introduced_in_standards: 1.14.0
+    binding: '2022-10-01'
+    deprecated: '2023-05-07'
+    retired: '2024-09-09'
+    status: retired
+  - endpoint: /energy/plans
+    version: 1
+    introduced: '2021-10-29'
+    introduced_in_standards: 1.14.0
+    binding: '2022-10-01'
+    deprecated: null
+    retired: null
+    status: current
+  events_source: https://consumerdatastandardsaustralia.github.io/standards/includes/endpoint-version-schedule/index.html
+sla:
+  availability_target: 99.5% per month
+  source: https://consumerdatastandardsaustralia.github.io/standards/#availability-requirements
+  performance_target: 95% of calls per hour within 1500ms (Unauthenticated tier)
+  performance_source: https://consumerdatastandardsaustralia.github.io/standards/#performance-requirements
+  planned_outages: >-
+    Excluded from the availability requirement. The standards require planned outages
+    to be published to data recipients with at least one week of lead time, except for
+    changes resolving a critical service or security issue.
+  detail: >-
+    These are binding CDS non-functional requirements on the AER as a designated data
+    holder, not a commercial SLA. There is no credit or remedy scheme.
+status_page:
+  type: machine-readable-endpoint
+  url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  outages_url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/outages
+  verified: '2026-07-27'
+  detail: >-
+    The AER serves the Consumer Data Standards Common API discovery endpoints
+    anonymously. GET /discovery/status with x-v 1 returned HTTP 200 with
+    {"data":{"status":"OK","updateTime":"..."}}, and GET /discovery/outages returned
+    {"data":{"outages":[]}}. This is a real status surface — an API, not an HTML
+    status page — and it is the correct thing to poll before raising a support
+    ticket. Both are versioned at x-v 1 and both are brand-scoped: they must be called
+    under a brand path segment (the unbranded /cds-au/v1/discovery/status returns
+    404). Observed quirk on 2026-07-27: the outages response echoed
+    links.self pointing at a different brand path (/1st-energy/) than the one
+    requested, so treat links.self on that endpoint as unreliable.
+  status_schema: openapi/cds-common-api-openapi.json#getStatus
+  outages_schema: openapi/cds-common-api-openapi.json#getOutages
+deprecated_operations: []
+not_implemented_by_this_holder:
+  detail: >-
+    16 of the 18 paths in the harvested CDR Energy API specification are consumer-data
+    endpoints held by retailers and by AEMO as secondary data holder. They return 404
+    on the AER host. This is architecture, not deprecation.
+  paths:
+  - /energy/accounts and all children (balance, billing, invoices, concessions, payment-schedule)
+  - /energy/electricity/servicepoints and all children (usage, der)
+roadmap:
+  source: https://www.aer.gov.au/energy-product-reference-data
+  stated_intentions:
+  - The per-retailer restriction on Get Generic Plans is under review ("We are looking to remove this restriction in the future").
+  - A dynamic, machine-readable retailer list is planned ("Currently no, but we are working on providing this in JSON format").
+  - Access to future and historical plans could be reviewed based on data recipient feedback.
+  note: >-
+    These are FAQ statements of intent on the documentation page, not a published
+    roadmap with dates or a public issue tracker.
+support: cdr-support@aer.gov.au

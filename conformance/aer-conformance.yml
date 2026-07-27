@@ -1,0 +1,109 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  https://www.aer.gov.au/energy-product-reference-data +
+  openapi/cdr-energy-api-openapi.json + openapi/cds-common-api-openapi.json + live
+  probes on 2026-07-27
+summary: >-
+  The AER's conformance posture is unusual in the best way: it is not self-asserted.
+  The contract it serves is authored by the Data Standards Body, binding under Part
+  IVD of the Competition and Consumer Act 2010, and independently corroborated by the
+  ACCC's own CDR Register, which resolves 79 of 84 energy data-holder brands to this
+  host. Standards-shaped payloads AND standards-shaped errors were observed live.
+standards:
+- id: cdr-consumer-data-standards-energy
+  name: Consumer Data Standards — CDR Energy API
+  version: 1.36.0
+  conforms: true
+  evidence: >-
+    Live 200 responses matching the CDS EnergyPlanListResponse and
+    EnergyPlanResponseV3 shapes, CDS URN error codes on failure, CDS-mandated base
+    path /{brand}/cds-au/v1/. The AER states it "continues to implement its Consumer
+    Data Right solution in alignment with the Consumer Data Standards".
+  scope: Get Generic Plans (x-v 1) and Get Generic Plan Detail (x-v 3) only.
+  source: https://consumerdatastandardsaustralia.github.io/standards/
+- id: cdr-consumer-data-standards-common
+  name: Consumer Data Standards — CDR Common API (discovery)
+  version: 1.36.0
+  conforms: true
+  evidence: >-
+    GET /discovery/status returned 200 with data.status OK; GET /discovery/outages
+    returned 200 with data.outages []. Both at x-v 1, both anonymous.
+- id: cdr-rules-2020
+  name: Competition and Consumer (Consumer Data Right) Rules 2020
+  conforms: true
+  evidence: >-
+    "The AER is a designated data holder under Competition and Consumer (Consumer Data
+    Right) Rules 2020" — published on the AER's own Energy Product Reference Data
+    page. Corroborated by the ACCC CDR Register.
+  regulator: ACCC
+  register: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+- id: cds-non-functional-requirements
+  name: CDS Non-Functional Requirements (availability, performance, traffic thresholds)
+  conforms: true
+  evidence: >-
+    The AER's own FAQ answers "What is the rate limit for APIs?" by pointing at the
+    CDR Non-Functional Requirements, adopting them as its own obligation. Captured in
+    rate-limits/aer-rate-limits.yml
+- id: openapi-3
+  name: OpenAPI 3.0.3
+  conforms: true
+  evidence: >-
+    The contract is published as OpenAPI 3.0.3 by the Data Standards Body. NOTE — this
+    specification is authored by the DSB, not by the AER; the AER publishes no
+    OpenAPI of its own (/openapi.json and /swagger.json return 404 on both hosts).
+- id: fapi
+  name: FAPI (Financial-grade API) — correlation header only
+  conforms: partial
+  evidence: >-
+    x-fapi-interaction-id is returned on every response. The full FAPI 1.0 Advanced
+    security profile applies to the authenticated CDR surface, which the AER does not
+    operate.
+- id: oauth2
+  name: OAuth 2.0
+  conforms: false
+  evidence: >-
+    Not applicable. The AER's endpoints are unauthenticated by design under the CDS;
+    no securitySchemes appear on the operations it serves and
+    /.well-known/oauth-authorization-server returns 404.
+- id: openid-connect
+  name: OpenID Connect
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404 on all three AER hosts.
+- id: rfc9457-problem-details
+  name: RFC 9457 Problem Details for HTTP APIs
+  conforms: false
+  evidence: >-
+    Errors use the CDS ResponseErrorListV2 envelope with urn:au-cds:error: codes and
+    content-type application/json, not application/problem+json.
+- id: rfc9116-security-txt
+  name: RFC 9116 security.txt
+  conforms: true
+  evidence: https://www.aer.gov.au/.well-known/security.txt returns 200 with Contact, Expires, Canonical and Preferred-Languages.
+- id: rfc8594-sunset-header
+  name: RFC 8594 Sunset header
+  conforms: false
+  evidence: >-
+    No Sunset or Deprecation response header. Version retirement is announced on the
+    documentation page and enforced with a 406.
+- id: cors
+  name: CORS
+  conforms: true
+  evidence: "access-control-allow-origin: * and access-control-expose-headers: x-v, Retry-After, x-fapi-interaction-id on every response."
+- id: green-button-espi
+  name: Green Button / NAESB ESPI
+  conforms: false
+  evidence: No reference anywhere in the AER's surface. CDR is Australia's answer to the same problem.
+- id: ieee-2030-5
+  name: IEEE 2030.5
+  conforms: false
+- id: iec-cim-61968
+  name: IEC CIM 61968/61970
+  conforms: false
+not_asserted:
+  detail: >-
+    The AER publishes no SOC 2, ISO 27001, PCI DSS, HIPAA or FedRAMP certification and
+    operates no trust centre — expected for an Australian Commonwealth regulator whose
+    public API surface holds no personal data. Its assurance posture is statutory
+    (Commonwealth PSPF/ISM obligations and the CDR regime), not commercial
+    certification.

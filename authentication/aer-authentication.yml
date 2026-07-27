@@ -1,0 +1,62 @@
+generated: '2026-07-27'
+method: searched
+source: openapi/cdr-energy-api-openapi.json + openapi/cds-common-api-openapi.json
+docs: https://www.aer.gov.au/energy-product-reference-data
+summary:
+  types: []
+  api_key_in: []
+  oauth2_flows: []
+  model: anonymous
+  statement: >-
+    The AER's public surface requires no credential of any kind. The Consumer Data
+    Standards classify Product Reference Data and the Common discovery endpoints as
+    unauthenticated ("Public") endpoints, and the harvested specifications carry no
+    securitySchemes and no security requirement on the operations the AER serves. The
+    AER's own FAQ states it plainly: "Our APIs are public, so they don't require
+    accreditation." There is no portal, no registration, no API key, no OAuth client
+    and no mTLS certificate involved in calling GET /energy/plans,
+    GET /energy/plans/{planId}, GET /discovery/status or GET /discovery/outages.
+schemes: []
+required_headers:
+- name: x-v
+  in: header
+  required: true
+  description: >-
+    Mandatory version header. Omitting it returns HTTP 400 with
+    urn:au-cds:error:cds-all:Header/Missing ("Header x-v must be provided").
+  verified: '2026-07-27'
+- name: x-min-v
+  in: header
+  required: false
+  description: >-
+    Optional minimum acceptable version. Version-range negotiation works on this host:
+    GET /energy/plans/{planId} with x-v 5 and x-min-v 1 returned HTTP 200 with response
+    header x-v 3 (the highest version the AER supports for that operation) rather than
+    406.
+  verified: '2026-07-27'
+response_headers:
+- name: x-v
+  description: Echoes the version actually served.
+- name: x-fapi-interaction-id
+  description: >-
+    FAPI correlation identifier returned on every response; a server-generated UUID
+    when the caller does not supply one. This is the request-tracing handle to quote
+    in a support email.
+- name: access-control-allow-origin
+  description: "* — CORS is fully open, so browser-side calls work without a proxy."
+- name: access-control-expose-headers
+  description: "x-v, Retry-After, x-fapi-interaction-id"
+gated_surface:
+  note: >-
+    The authenticated half of the CDR energy regime is NOT the AER's. Consumer usage,
+    billing, account and service-point endpoints exist in the same specification but
+    return 404 on the AER host — retailers are the primary data holders and AEMO is
+    the secondary data holder gateway. Reaching those endpoints requires ACCC
+    accreditation as a data recipient, consumer consent, and the CDS information
+    security profile (OAuth 2.0 / OpenID Connect with mTLS-bound client
+    authentication, FAPI 1.0 Advanced). No OpenID configuration is served on any AER
+    host — /.well-known/openid-configuration returns 404 on
+    cdr.energymadeeasy.gov.au, www.energymadeeasy.gov.au and www.aer.gov.au.
+  accreditation: https://www.cdr.gov.au/for-providers/become-accredited-data-recipient
+  infosec_profile: https://consumerdatastandardsaustralia.github.io/standards/#security-profile
+support_contact: cdr-support@aer.gov.au

@@ -1,0 +1,73 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the AER's implementation of the CDR Energy API
+  version: 1.0.0
+extends: openapi/cdr-energy-api-openapi.json
+x-generated: '2026-07-27'
+x-method: generated
+x-source: >-
+  Live probes of https://cdr.energymadeeasy.gov.au on 2026-07-27 plus
+  https://www.aer.gov.au/energy-product-reference-data. The extended document is
+  authored by the Data Standards Body and is deliberately left unmodified; this
+  overlay records what is true of the AER's deployment of it — which operations are
+  actually served, at which versions, on which real server.
+actions:
+- target: $.info
+  update:
+    x-apievangelist-provider: Australian Energy Regulator
+    x-apievangelist-provider-slug: aer
+    x-apievangelist-spec-author: Data Standards Body (dsb.gov.au)
+    x-apievangelist-note: >-
+      Not published by the AER. Harvested verbatim from the Consumer Data Standards
+      because it is the contract the AER serves. The AER implements 2 of the 23
+      operations in this document.
+- target: $.servers
+  update:
+  - url: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1
+    description: >-
+      AER-operated Consumer Data Right energy Product Reference Data host. Anonymous,
+      no accreditation. {brand} is a retailer path segment resolved from the ACCC CDR
+      Register (79 of 84 registered energy brands resolve here).
+    variables:
+      brand:
+        default: agl
+        description: >-
+          Retailer brand path segment, e.g. agl, origin, energyaustralia, aurora,
+          engie, powershop, energy-locals, ergon. An unrecognised value returns HTTP
+          200 with meta.totalRecords 0 rather than 404.
+- target: $.paths['/energy/plans'].get
+  update:
+    x-apievangelist-served-by-aer: true
+    x-apievangelist-supported-versions: [1]
+    x-apievangelist-verified: '2026-07-27'
+    x-apievangelist-verification: >-
+      GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?type=ALL with
+      header x-v 1 returned HTTP 200, meta.totalRecords 1343.
+    x-apievangelist-constraints:
+      per_brand_only: >-
+        No Australia-wide query. One call per retailer brand; the AER states the
+        restriction is under review.
+      current_plans_only: >-
+        Future and historical plans are not exposed regardless of the effective
+        parameter value.
+      page_size_max: 1000
+      jurisdictions: [TAS, VIC, SA, ACT, NSW, QLD]
+      excluded_jurisdictions: [WA, NT]
+- target: $.paths['/energy/plans/{planId}'].get
+  update:
+    x-apievangelist-served-by-aer: true
+    x-apievangelist-supported-versions: [3]
+    x-apievangelist-retired-versions: [2]
+    x-apievangelist-retired-on: '2025-03-03'
+    x-apievangelist-verified: '2026-07-27'
+    x-apievangelist-verification: >-
+      GET .../energy/plans/AGL1067320MRE2@EME returned 200 for x-v 3 and 406 for x-v
+      1, 2 and 4. x-v 5 with x-min-v 1 returned 200 served as x-v 3.
+- target: $.paths['/energy/accounts']
+  update:
+    x-apievangelist-served-by-aer: false
+    x-apievangelist-note: >-
+      404 on the AER host. Consumer data is held by retailers as primary data holders;
+      access requires ACCC accreditation, consumer consent, OAuth2/OIDC and mTLS. The
+      same is true of every other /energy/accounts and
+      /energy/electricity/servicepoints path in this document.

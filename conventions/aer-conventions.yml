@@ -1,0 +1,125 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  https://www.aer.gov.au/energy-product-reference-data +
+  https://consumerdatastandardsaustralia.github.io/standards/ + live calls to
+  https://cdr.energymadeeasy.gov.au on 2026-07-27
+summary: >-
+  The AER does not author its own API conventions. Every cross-cutting rule below is
+  set by the binding Consumer Data Standards (CDS) and implemented verbatim by the
+  AER — the AER's FAQ says field shapes are "governed by the Consumer Data Standards"
+  and directs change requests to the Data Standards Body, not to itself. What follows
+  was confirmed against the live host, not just read from the standard.
+authentication:
+  style: none
+  detail: Public (unauthenticated) CDS endpoints. See authentication/aer-authentication.yml
+base_url:
+  pattern: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1
+  detail: >-
+    CDS-mandated shape https://{holder-path}/cds-au/{version}/{industry}. The {brand}
+    path segment is real routing, taken from the AER's published base-URI list or read
+    from productBaseUri in the ACCC CDR Register. An unknown brand does not 404 — it
+    returns HTTP 200 with meta.totalRecords 0, so callers must validate the brand
+    against the register rather than trusting an empty result.
+versioning:
+  scheme: header
+  request_headers: [x-v, x-min-v]
+  response_header: x-v
+  current:
+    listEnergyPlans: 1
+    getEnergyPlanDetail: 3
+    getStatus: 1
+    getOutages: 1
+  negotiation: >-
+    x-v alone must match a supported version exactly or the call returns 406 with
+    urn:au-cds:error:cds-all:Header/UnsupportedVersion. Sending x-min-v alongside a
+    higher x-v enables range negotiation and the server serves the highest supported
+    version (verified: x-v 5 + x-min-v 1 on getEnergyPlanDetail returned 200, x-v 3).
+  in_url: No. The /v1 in the path is the CDS base-path version, not the endpoint version.
+pagination:
+  style: page-number
+  applies_to: [listEnergyPlans]
+  request_params:
+  - name: page
+    default: 1
+    description: 1-based page number.
+  - name: page-size
+    default: 25
+    maximum: 1000
+    description: >-
+      Exceeding the ceiling is a hard 400 with
+      urn:au-cds:error:cds-all:Field/InvalidPageSize, not a silent clamp.
+  response_fields:
+    meta: [totalRecords, totalPages]
+    links: [self, first, prev, next, last]
+  detail: >-
+    There is no cursor and no Australia-wide query. One paged call per retailer brand;
+    the AER FAQ says the per-retailer restriction is deliberate and under review.
+filtering:
+  listEnergyPlans:
+  - name: type
+    values: [STANDING, MARKET, REGULATED, ALL]
+  - name: fuelType
+    values: [ELECTRICITY, GAS, DUAL, ALL]
+  - name: effective
+    values: [CURRENT, FUTURE, ALL]
+    note: >-
+      The AER serves current plans only; the FAQ states future and historical plans
+      cannot be accessed.
+  - name: updated-since
+    format: DateTimeString
+  - name: brand
+    description: Filter within a brand's own catalogue.
+field_expansion:
+  supported: false
+  detail: >-
+    Two fixed projections instead of expansion — a summary object from Get Generic
+    Plans and the full contract from Get Generic Plan Detail. No sparse fieldsets, no
+    include/expand parameter. Optional fields are retailer discretion (excluded
+    postcodes, controlled load, demand charges, discounts, additional information).
+metadata:
+  supported: false
+  detail: >-
+    No customer-defined metadata. The AER FAQ: "There are no unique or variable
+    fields." Every field is CDS-governed.
+envelope:
+  success:
+    shape: '{ "data": { ... }, "links": { ... }, "meta": { ... } }'
+    detail: Payload always under data; links always present; meta on paginated responses.
+  error:
+    shape: '{ "errors": [ { "code": "urn:au-cds:error:...", "title": "...", "detail": "..." } ] }'
+    format: cds-error-list
+    rfc9457: false
+    detail: >-
+      CDS ResponseErrorListV2. Codes are URNs in the urn:au-cds:error: namespace, not
+      RFC 9457 problem+json; content-type is application/json. See
+      errors/aer-problem-types.yml
+request_tracing:
+  header: x-fapi-interaction-id
+  direction: request optional, response always
+  detail: >-
+    FAPI correlation ID. Supply your own UUID to correlate, or read the server's from
+    the response; quote it when mailing cdr-support@aer.gov.au.
+idempotency:
+  supported: false
+  detail: >-
+    Not applicable and deliberately not claimed. The AER's entire public surface is
+    read-only GET — there is no write operation, no Idempotency-Key header in the
+    specification and no idempotency contract to record.
+rate_limit_signalling:
+  headers: [Retry-After]
+  detail: >-
+    Retry-After is CORS-exposed on every response, so throttling is signalled the
+    standard way. Thresholds are the CDS Non-Functional Requirements, not an AER
+    price plan. See rate-limits/aer-rate-limits.yml
+caching:
+  detail: >-
+    Served through Amazon CloudFront (x-cache, x-amz-cf-pop headers observed). No
+    ETag or Cache-Control contract is published in the standard for these endpoints;
+    use updated-since for incremental pulls.
+cross_links:
+  errors: errors/aer-problem-types.yml
+  lifecycle: lifecycle/aer-lifecycle.yml
+  authentication: authentication/aer-authentication.yml
+  rate_limits: rate-limits/aer-rate-limits.yml
+  conformance: conformance/aer-conformance.yml

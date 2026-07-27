@@ -1,0 +1,64 @@
+generated: '2026-07-27'
+method: searched
+source: live probes of the AER website host and the CDR product-data host
+note: >-
+  www.aer.gov.au is fronted by Akamai and returns no HTTP response to direct curl
+  from this probe host (TLS completes, then the connection times out with 0 bytes).
+  Documents on that host were therefore retrieved through the r.jina.ai text proxy,
+  which passes the origin status through; they are marked via_text_proxy: true and
+  should be read as origin statuses observed indirectly. Probes against
+  cdr.energymadeeasy.gov.au and www.energymadeeasy.gov.au were direct.
+hosts:
+- host: https://www.aer.gov.au
+  role: corporate website and developer documentation
+  documents:
+  - path: /.well-known/security.txt
+    status: 200
+    via_text_proxy: true
+    file: aer-security.txt
+    note: >-
+      RFC 9116. Contact mailto:AERWebTeam@aer.gov.au, Expires 2099-11-01, Canonical
+      self-referencing, Preferred-Languages en. No Policy, Encryption, Acknowledgments
+      or Hiring field is published.
+  - path: /.well-known/api-catalog
+    status: 404
+    via_text_proxy: true
+  - path: /.well-known/openid-configuration
+    status: 404
+    via_text_proxy: true
+- host: https://cdr.energymadeeasy.gov.au
+  role: CDR energy Product Reference Data host operated by the AER
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /openapi.json
+    status: 404
+  - path: /swagger.json
+    status: 404
+  - path: /api-docs
+    status: 404
+  - path: /llms.txt
+    status: 404
+- host: https://www.energymadeeasy.gov.au
+  role: AER-operated consumer price comparison service
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+machine_readable_discovery:
+  note: >-
+    The AER publishes no /.well-known discovery surface on its API host. Discovery of
+    the AER's product-data endpoints happens instead through two real, anonymous,
+    machine-readable surfaces recorded elsewhere in this repo — the ACCC CDR Register
+    brand summary (which resolves 79 of 84 energy brands to this host) and the
+    Consumer Data Standards Common API discovery endpoints served on the AER host.
+  cdr_register: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  status_endpoint: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1/discovery/status
+  outages_endpoint: https://cdr.energymadeeasy.gov.au/{brand}/cds-au/v1/discovery/outages

@@ -1,0 +1,59 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  https://www.aer.gov.au/energy-product-reference-data (Technical FAQ: "What is the
+  rate limit for APIs?" — answered by pointing at the CDR Non-Functional
+  Requirements) + Consumer Data Standards NFRs
+docs: https://consumerdatastandardsaustralia.github.io/standards/#traffic-thresholds
+model: regulated-non-functional-requirements
+free: true
+detail: >-
+  There is no AER rate card, no key, no quota and no tier. Throughput is governed by
+  the binding Consumer Data Standards traffic thresholds that apply to every
+  designated data holder. Calls in excess of a threshold may be freely throttled or
+  rejected by the data holder without counting against its performance or availability
+  obligations.
+rate_limits:
+- name: Public (unauthenticated) traffic
+  applies_to: >-
+    All AER-served endpoints — Get Generic Plans, Get Generic Plan Detail, Get Status,
+    Get Outages
+  limit_count: 300
+  limit_unit: transactions per second
+  scope: total across all consumers, additive to secure traffic
+  source: https://consumerdatastandardsaustralia.github.io/standards/#traffic-thresholds
+- name: Page size ceiling
+  applies_to: listEnergyPlans
+  limit_count: 1000
+  limit_unit: records per call
+  default: 25
+  scope: per request
+  enforcement: >-
+    Hard 400 with urn:au-cds:error:cds-all:Field/InvalidPageSize above the ceiling
+    (verified 2026-07-27).
+  source: https://www.aer.gov.au/energy-product-reference-data
+- name: Records per call, plan detail
+  applies_to: getEnergyPlanDetail
+  limit_count: 1
+  limit_unit: record per call
+  scope: per request
+  source: https://www.aer.gov.au/energy-product-reference-data
+performance_requirement:
+  tier: Unauthenticated
+  target: 95% of calls per hour responded to within 1500ms
+  source: https://consumerdatastandardsaustralia.github.io/standards/#performance-requirements
+availability_requirement:
+  target: 99.5% per month
+  source: https://consumerdatastandardsaustralia.github.io/standards/#availability-requirements
+signalling:
+  headers: [Retry-After]
+  cors_exposed: true
+  detail: >-
+    Retry-After is listed in access-control-expose-headers on every response, so a
+    browser client can read it. No X-RateLimit-Limit / -Remaining / -Reset headers are
+    emitted — the CDS does not define them.
+practical_guidance: >-
+  A full national pull is one paged sweep per retailer brand: 79 of the 84 brands in
+  the ACCC CDR Register resolve to this host, so enumerate productBaseUri from the
+  register, then page each brand at page-size 1000 and use updated-since for
+  incremental refreshes.

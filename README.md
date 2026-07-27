@@ -96,6 +96,24 @@ Anonymous, unaccredited Consumer Data Right energy Product Reference Data endpoi
 
 - **Kin Lane** — kin@apievangelist.com
 
+## Artifacts
+
+Enrichment round 2026-07-27 (search → generate → derive; every claim probed live or cited):
+
+- `openapi/` — CDR Energy API 1.36.0 and CDR Common API 1.36.0 (both DSB-authored, harvested verbatim)
+- `overlays/` — what is true of the **AER's deployment** of those two specs (which operations are served, at which versions, on which real host)
+- `authentication/` — the anonymous model plus the mandatory `x-v` / optional `x-min-v` header contract
+- `conventions/` — base-URI shape, version negotiation, paging, envelope, tracing, CORS (no idempotency: the surface is read-only)
+- `errors/` — the CDS `urn:au-cds:error:` catalogue, captured from live 400/404/406 responses
+- `lifecycle/` — endpoint version schedule with real deprecation and retirement dates, CDS SLA, and the machine-readable status endpoint
+- `rate-limits/` — the CDS Non-Functional Requirements the AER's own FAQ adopts (300 TPS public traffic, 1500ms/95%, 99.5% availability)
+- `conformance/` — what the AER conforms to and, just as usefully, what it does not (no OAuth, no RFC 9457, no Green Button/IEEE 2030.5/CIM)
+- `data-model/` — the plan entity graph derived from the specification's `$ref` tree
+- `changelog/` — AER version notices plus DSB standards releases
+- `well-known/` + `security/` — RFC 9116 `security.txt` (contact only, no policy), TLS/DNS posture
+- `mcp/` — a **candidate** tool surface and its crosswalk to real `operationId`s (the AER publishes no MCP server)
+- `skills/`, `llms/` — generated agent operating instructions and an `llms.txt` (the AER publishes neither)
+
 ## Notes
 
-The single specification in `openapi/` is the Data Standards Body's **CDR Energy API 1.36.0**, harvested verbatim from the Consumer Data Standards repository on 2026-07-27. It is the contract the AER serves, not a specification the AER publishes — the AER publishes none. The AER implements only the two `/energy/plans` operations from it; the account, billing, service point, usage and distributed-energy-resource paths belong to retailers and AEMO and return 404 on the AER's host. See `review.yml` for the full mandate, access-gate and provenance record.
+The specifications in `openapi/` are the Data Standards Body's **CDR Energy API 1.36.0** and **CDR Common API 1.36.0**, harvested verbatim from the Consumer Data Standards repository on 2026-07-27. It is the contract the AER serves, not a specification the AER publishes — the AER publishes none. The AER implements only the two `/energy/plans` operations from the energy spec, plus the two anonymous `/discovery/status` and `/discovery/outages` operations from the common spec — verified live on 2026-07-27, and the closest thing the AER has to a status page. The account, billing, service point, usage and distributed-energy-resource paths belong to retailers and AEMO and return 404 on the AER's host. See `review.yml` for the full mandate, access-gate and provenance record.

@@ -1,0 +1,80 @@
+generated: '2026-07-27'
+method: searched
+source: >-
+  https://www.aer.gov.au/energy-product-reference-data (Supported API Versions) + https://github.com/ConsumerDataStandardsAustralia/standards/releases
+docs: https://consumerdatastandardsaustralia.github.io/standards/#changelog
+scheme:
+  api_versioning: per-endpoint integer version negotiated with the x-v request header
+  standard_versioning: semantic versioning of the Consumer Data Standards as a whole (currently
+    1.36.0)
+current:
+  standards_version: 1.36.0
+  endpoint_versions:
+    Get Generic Plans: 1
+    Get Generic Plan Detail: 3
+    Get Status: 1
+    Get Outages: 1
+note: >-
+  The AER does not publish a dated changelog of its own. Change happens in two places: the
+  Data Standards Body versions the binding contract (releases below), and the AER posts endpoint
+  version transitions in the "Supported API Versions" block on its documentation page. Both
+  are recorded here; the entries attributed to the AER are the only provider-published change
+  notices found.
+version_schedule: >-
+  https://consumerdatastandardsaustralia.github.io/standards/includes/endpoint-version-schedule/index.html
+entries:
+- date: '2025-12-04'
+  source: data-standards-body
+  version: 1.36.0
+  breaking: null
+  highlights:
+  - >-
+    Consumer Data Standards 1.36.0 released; the version of the CDR Energy API and CDR Common
+    API harvested into this repo.
+  url: https://github.com/ConsumerDataStandardsAustralia/standards/releases/tag/v1.36.0
+- date: '2025-10-08'
+  source: data-standards-body
+  version: 1.35.1
+  url: https://github.com/ConsumerDataStandardsAustralia/standards/releases/tag/v1.35.1
+- date: '2025-07-29'
+  source: data-standards-body
+  version: 1.35.0
+  url: https://github.com/ConsumerDataStandardsAustralia/standards/releases/tag/v1.35.0
+- date: '2025-04-11'
+  source: data-standards-body
+  version: 1.34.1
+  url: https://github.com/ConsumerDataStandardsAustralia/standards/releases/tag/v1.34.1
+- date: '2025-03-13'
+  source: data-standards-body
+  version: 1.34.0
+  url: https://github.com/ConsumerDataStandardsAustralia/standards/releases/tag/v1.34.0
+- date: '2025-03-03'
+  source: aer
+  version: Get Generic Plan Detail v3
+  breaking: true
+  highlights:
+  - Get Generic Plan Detail version 2 retired and no longer available to data recipients.
+  - Version 3 becomes the only supported version; x-v 2 now returns HTTP 406.
+  url: https://www.aer.gov.au/energy-product-reference-data
+- date: '2024-11-11'
+  source: data-standards-body
+  version: Get Generic Plan Detail v3
+  breaking: false
+  highlights:
+  - Get Generic Plan Detail version 3 binding date; introduced 2024-04-24 in standards 1.30.0.
+  url: >-
+    https://consumerdatastandardsaustralia.github.io/standards/includes/endpoint-version-schedule/index.html
+- date: '2024-09-09'
+  source: data-standards-body
+  version: Get Generic Plan Detail v1
+  breaking: true
+  highlights:
+  - Get Generic Plan Detail version 1 retired (deprecated 2023-05-07 in standards 1.24.0).
+  url: >-
+    https://consumerdatastandardsaustralia.github.io/standards/includes/endpoint-version-schedule/index.html
+change_requests:
+  detail: >-
+    Field-level change requests do not go to the AER. Its FAQ routes them to the Data Standards
+    Body change-request process, because "the fields are governed by the Consumer Data Standards".
+  url: https://cdr-support.zendesk.com/hc/en-us/articles/900003869206-Creating-a-Change-Request
+  aer_contact: cdr-support@aer.gov.au
