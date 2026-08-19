@@ -1,0 +1,11 @@
+[
+  {
+    "repo": "aer",
+    "captured_at": "2026-08-17T121411",
+    "source_url": "https://www.aer.gov.au/",
+    "source_type": "Website",
+    "file": "aer-2026-08-17T121411.png",
+    "bytes": 362323,
+    "capture": "playwright-local"
+  }
+]

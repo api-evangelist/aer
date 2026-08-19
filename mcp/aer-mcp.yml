@@ -9,68 +9,84 @@ searched:
   - https://cdr.energymadeeasy.gov.au/.well-known/ai-plugin.json (404)
   - https://cdr.energymadeeasy.gov.au/llms.txt (404)
   - npm @modelcontextprotocol scope and public MCP registries
-  note: >-
-    The AER publishes no MCP server, no agent guidance and no llms.txt. The tools
-    below are a CANDIDATE surface derived from the operations the AER actually serves —
-    they are not offered by the AER.
+  note: The AER publishes no MCP server, no agent guidance and no llms.txt. The tools below are a CANDIDATE
+    surface derived from the operations the AER actually serves — they are not offered by the AER.
 server:
   name: aer-energy-prd
   transport: http
   url: null
   auth: none
-  note: >-
-    Any implementation is trivially hostable by a third party: every backing operation
-    is anonymous, CORS-open and read-only, so no credential brokering is needed. The
-    one piece of state a server must carry is the retailer brand path segment, which
-    should be refreshed from the ACCC CDR Register rather than hard-coded.
+  note: 'Any implementation is trivially hostable by a third party: every backing operation is anonymous,
+    CORS-open and read-only, so no credential brokering is needed. The one piece of state a server must
+    carry is the retailer brand path segment, which should be refreshed from the ACCC CDR Register rather
+    than hard-coded.'
 tools:
 - name: list_energy_plans
-  description: >-
-    List current, generally available retail electricity and gas plans for one
-    retailer brand, with filters for plan type, fuel type and last-updated date.
+  description: List current, generally available retail electricity and gas plans for one retailer brand,
+    with filters for plan type, fuel type and last-updated date.
   source_operation: openapi/cdr-energy-api-openapi.json#listEnergyPlans
   http: GET /{brand}/cds-au/v1/energy/plans
-  required_headers: {x-v: '1'}
-  inputs: [brand, type, fuelType, effective, updated-since, page, page-size]
+  required_headers:
+    x-v: '1'
+  inputs:
+  - brand
+  - type
+  - fuelType
+  - effective
+  - updated-since
+  - page
+  - page-size
   read_only: true
 - name: get_energy_plan_detail
-  description: >-
-    Get the full contract for one plan by planId — tariff periods, controlled load,
-    demand charges, discounts, incentives, fees, green power, solar feed-in and
-    eligibility.
+  description: Get the full contract for one plan by planId — tariff periods, controlled load, demand
+    charges, discounts, incentives, fees, green power, solar feed-in and eligibility.
   source_operation: openapi/cdr-energy-api-openapi.json#getEnergyPlanDetail
   http: GET /{brand}/cds-au/v1/energy/plans/{planId}
-  required_headers: {x-v: '3'}
-  inputs: [brand, planId]
+  required_headers:
+    x-v: '3'
+  inputs:
+  - brand
+  - planId
   read_only: true
 - name: get_status
   description: Current operational status of the data holder's CDR endpoints.
   source_operation: openapi/cds-common-api-openapi.json#getStatus
   http: GET /{brand}/cds-au/v1/discovery/status
-  required_headers: {x-v: '1'}
-  inputs: [brand]
+  required_headers:
+    x-v: '1'
+  inputs:
+  - brand
   read_only: true
 - name: get_outages
   description: Scheduled and current outages for the data holder's CDR endpoints.
   source_operation: openapi/cds-common-api-openapi.json#getOutages
   http: GET /{brand}/cds-au/v1/discovery/outages
-  required_headers: {x-v: '1'}
-  inputs: [brand]
+  required_headers:
+    x-v: '1'
+  inputs:
+  - brand
   read_only: true
 - name: list_energy_brands
-  description: >-
-    Enumerate Australian energy data-holder brands and their product base URIs so a
-    caller can resolve the {brand} path segment.
+  description: Enumerate Australian energy data-holder brands and their product base URIs so a caller
+    can resolve the {brand} path segment.
   source_operation: null
   http: GET https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
-  required_headers: {x-v: '1'}
+  required_headers:
+    x-v: '1'
   read_only: true
-  note: >-
-    Backed by the ACCC CDR Register, not by the AER. Included because there is no
-    AER-served brand list — the AER FAQ says a JSON retailer list is still "something
-    we are working on" — and 79 of the 84 registered brands resolve to the AER host.
+  note: Backed by the ACCC CDR Register, not by the AER. Included because there is no AER-served brand
+    list — the AER FAQ says a JSON retailer list is still "something we are working on" — and 79 of the
+    84 registered brands resolve to the AER host.
 agent_notes:
-- Every call is read-only. There is no write surface, no idempotency contract and no consequence class beyond reading public data.
+- Every call is read-only. There is no write surface, no idempotency contract and no consequence class
+  beyond reading public data.
 - There is no Australia-wide query. A national answer requires one paged sweep per brand.
-- An unknown brand returns HTTP 200 with totalRecords 0, not 404 — validate brands against the register before reporting "no plans".
+- An unknown brand returns HTTP 200 with totalRecords 0, not 404 — validate brands against the register
+  before reporting "no plans".
 - Version headers are mandatory and exact: x-v 1 for plans/status/outages, x-v 3 for plan detail.
+deployment:
+  mode: none
+  verified: derived
+  tools: 5
+  checked: '2026-08-12'
+  source: catalog MCP census
