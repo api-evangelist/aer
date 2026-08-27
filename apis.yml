@@ -59,105 +59,276 @@ created: '2026-07-27'
 modified: '2026-07-27'
 specificationVersion: '0.23'
 apis:
-- aid: aer:aer-energy-product-reference-data-get-generic-plans
-  name: AER Energy Product Reference Data - Get Generic Plans
-  description: Anonymous, unaccredited Consumer Data Right energy Product Reference
-    Data endpoint operated by the AER. Returns a paged summary of all current,
-    generally available retail energy plans for one retailer brand, covering plan
-    name, fuel type, brand, distributor and postcode geography, plan type and
-    effective dates. The retailer brand is a path segment taken from the AER's
-    published list of CDR energy base URIs — for example
-    https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?type=ALL, which
-    returned HTTP 200 with 1,343 AGL plans on 2026-07-27. Requires the x-v request
-    header; only version 1 is supported and any other value returns 406. Default page
-    size is 25, maximum 1000. There is no Australia-wide call — one request per
-    retailer brand.
+- aid: aer:aer-data-holder-customers-api
+  name: Australian Energy Regulator Data Holder Customers API
+  description: Data Holder Customer endpoints
   humanURL: https://www.aer.gov.au/energy-product-reference-data
   baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
   tags:
-  - Energy
-  - Consumer Data Right
-  - Product Reference Data
-  - Electricity
-  - Gas
-  - Tariffs
+  - Data Holder Customers
   properties:
+  - type: OpenAPI
+    url: openapi/aer-data-holder-customers-api-openapi.yml
   - type: Documentation
     url: https://www.aer.gov.au/energy-product-reference-data
   - type: APIReference
     url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
-  - type: OpenAPI
-    url: openapi/cdr-energy-api-openapi.json
   - type: Specification
     url: https://consumerdatastandardsaustralia.github.io/standards/
   - type: Documentation
-    url: https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
   - type: Documentation
     url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
   - type: Registry
     url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
-- aid: aer:aer-energy-product-reference-data-get-generic-plan-detail
-  name: AER Energy Product Reference Data - Get Generic Plan Detail
-  description: Anonymous, unaccredited Consumer Data Right energy Product Reference
-    Data endpoint operated by the AER. Returns the full detail of a single current,
-    generally available retail energy plan by plan identifier — tariff structures,
-    metering charges, contract terms, incentives, discounts, fees, solar feed-in and
-    eligibility. Version 3 is the supported version; version 2 was retired on 3 March
-    2025 and requests with x-v other than 3 return 406. Verified 2026-07-27 with
-    GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans/AGL1067320MRE2@EME
-    and header x-v 3, HTTP 200.
-  humanURL: https://www.aer.gov.au/energy-product-reference-data
-  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
-  tags:
-  - Energy
-  - Consumer Data Right
-  - Product Reference Data
-  - Tariffs
-  - Electricity
-  - Gas
-  properties:
-  - type: Documentation
-    url: https://www.aer.gov.au/energy-product-reference-data
   - type: APIReference
-    url: https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
-  - type: OpenAPI
-    url: openapi/cdr-energy-api-openapi.json
-  - type: Specification
-    url: https://consumerdatastandardsaustralia.github.io/standards/
-  - type: Documentation
-    url: https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
-- aid: aer:aer-cdr-discovery-status-and-outages
-  name: AER CDR Discovery - Get Status and Get Outages
-  description: Anonymous Consumer Data Standards Common API discovery endpoints served
-    by the AER on its CDR host. GET /discovery/status returns the current operational
-    status of the data holder's CDR endpoints and GET /discovery/outages returns
-    scheduled and current outages. Verified 2026-07-27 - status returned HTTP 200 with
-    data.status OK and an updateTime, outages returned HTTP 200 with an empty outages
-    array, both with header x-v 1 (x-v 2 returns 406). This is the AER's status page -
-    there is no HTML status site - and it is the correct surface to poll before raising
-    a support ticket against the product reference data endpoints. Both endpoints are
-    brand-scoped and must be called under a retailer path segment; the unbranded
-    /cds-au/v1/discovery/status returns 404. Observed quirk - the outages response
-    links.self echoed a different brand path than the one requested.
-  humanURL: https://www.aer.gov.au/energy-product-reference-data
-  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
-  tags:
-  - Energy
-  - Consumer Data Right
-  - Status
-  - Outages
-  - Discovery
-  properties:
-  - type: OpenAPI
-    url: openapi/cds-common-api-openapi.json
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
   - type: StatusPage
     url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
   - type: APIReference
     url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-data-holder-operations-api
+  name: Australian Energy Regulator Data Holder Operations API
+  description: Data Holder Operations endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Data Holder Operations
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-data-holder-operations-api-openapi.yml
   - type: Documentation
     url: https://www.aer.gov.au/energy-product-reference-data
-  - type: Overlay
-    url: overlays/aer-cds-common-api-overlay.yaml
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-distributed-energy-resources-api
+  name: Australian Energy Regulator Distributed Energy Resources API
+  description: Distributed Energy Resource endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Distributed Energy Resources
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-distributed-energy-resources-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-electricity-service-points-api
+  name: Australian Energy Regulator Electricity Service Points API
+  description: Electricity Service Point endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Electricity Service Points
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-electricity-service-points-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-electricity-usage-api
+  name: Australian Energy Regulator Electricity Usage API
+  description: Electricity Usage endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Electricity Usage
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-electricity-usage-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-energy-account-balances-api
+  name: Australian Energy Regulator Energy Account Balances API
+  description: Energy Account Balance endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Energy Account Balances
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-energy-account-balances-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-energy-account-billing-api
+  name: Australian Energy Regulator Energy Account Billing API
+  description: Energy Account Billing endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Energy Account Billing
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-energy-account-billing-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-energy-accounts-api
+  name: Australian Energy Regulator Energy Accounts API
+  description: Energy Account endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Energy Accounts
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-energy-accounts-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
+- aid: aer:aer-energy-plans-api
+  name: Australian Energy Regulator Energy Plans API
+  description: Energy Plan endpoints
+  humanURL: https://www.aer.gov.au/energy-product-reference-data
+  baseURL: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1
+  tags:
+  - Energy Plans
+  properties:
+  - type: OpenAPI
+    url: openapi/aer-energy-plans-api-openapi.yml
+  - type: Documentation
+    url: https://www.aer.gov.au/energy-product-reference-data
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans
+  - type: Specification
+    url: https://consumerdatastandardsaustralia.github.io/standards/
+  - type: Documentation
+    url: >-
+      https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands
+  - type: Documentation
+    url: https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data
+  - type: Registry
+    url: https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary
+  - type: APIReference
+    url: >-
+      https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail
+  - type: StatusPage
+    url: https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status
+  - type: APIReference
+    url: https://consumerdatastandardsaustralia.github.io/standards/#common-apis
 common:
 - type: DomainSecurity
   url: security/aer-domain-security.yml
