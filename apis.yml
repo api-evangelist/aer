@@ -28,6 +28,18 @@ description: >-
   statistics, wholesale performance reporting and public registers are published as
   web pages, charts and document downloads, not as an API, and no developer.,
   developers., api., docs. or data. subdomain resolves.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://www.aer.gov.au/sites/default/files/2023-08/logo-2x.png
 tags:
 - Energy
