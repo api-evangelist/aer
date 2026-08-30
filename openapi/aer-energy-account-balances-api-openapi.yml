@@ -1,0 +1,466 @@
+openapi: 3.2.0
+info:
+  title: CDR Energy Energy Account Balances API
+  version: 1.36.0
+  description: Specifications for resource endpoints applicable to data holders in the Energy sector.
+  contact:
+    name: Data Standards Body
+    email: contact@dsb.gov.au
+    url: https://dsb.gov.au/
+servers:
+- description: MTLS
+  url: https://mtls.dh.example.com/cds-au/v1
+tags:
+- name: Energy Account Balances
+  x-shortName: Account Balances
+  description: Energy Account Balance endpoints
+paths:
+  /energy/accounts/{accountId}/balance:
+    get:
+      summary: Get Balance For Energy Account
+      operationId: getEnergyAccountBalance
+      description: Obtain the current balance for a specific account.
+      x-scopes:
+      - energy:billing:read
+      tags:
+      - Energy Account Balances
+      x-version: '1'
+      parameters:
+      - $ref: '#/components/parameters/PathAccountId'
+      - $ref: '#/components/parameters/HeaderXV'
+      - $ref: '#/components/parameters/HeaderXMinV'
+      - $ref: '#/components/parameters/HeaderXFAPIInteractionId'
+      - $ref: '#/components/parameters/HeaderXFAPIAuthDate'
+      - $ref: '#/components/parameters/HeaderXFAPICustomerIPAddress'
+      - $ref: '#/components/parameters/HeaderXCDSClientHeaders'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetEnergyAccountBalance200'
+        '400':
+          $ref: '#/components/responses/GetEnergyAccountBalance400'
+        '404':
+          $ref: '#/components/responses/GetEnergyAccountBalance404'
+        '406':
+          $ref: '#/components/responses/GetEnergyAccountBalance406'
+  /energy/accounts/balances:
+    get:
+      summary: Get Bulk Balances for Energy
+      operationId: listEnergyAccountBalancesBulk
+      description: Obtain the current balance for all accounts.
+      x-scopes:
+      - energy:billing:read
+      tags:
+      - Energy Account Balances
+      x-version: '1'
+      parameters:
+      - $ref: '#/components/parameters/QueryPage'
+      - $ref: '#/components/parameters/QueryPageSize'
+      - $ref: '#/components/parameters/HeaderXV'
+      - $ref: '#/components/parameters/HeaderXMinV'
+      - $ref: '#/components/parameters/HeaderXFAPIInteractionId'
+      - $ref: '#/components/parameters/HeaderXFAPIAuthDate'
+      - $ref: '#/components/parameters/HeaderXFAPICustomerIPAddress'
+      - $ref: '#/components/parameters/HeaderXCDSClientHeaders'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEnergyAccountBalancesBulk200'
+        '400':
+          $ref: '#/components/responses/ListEnergyAccountBalancesBulk400'
+        '406':
+          $ref: '#/components/responses/ListEnergyAccountBalancesBulk406'
+        '422':
+          $ref: '#/components/responses/ListEnergyAccountBalancesBulk422'
+    post:
+      summary: Get Balances For Specific Energy Accounts
+      operationId: listEnergyAccountBalancesSpecificAccounts
+      description: Obtain the current balance for a specified set of accounts.
+      x-scopes:
+      - energy:billing:read
+      tags:
+      - Energy Account Balances
+      x-version: '1'
+      parameters:
+      - $ref: '#/components/parameters/QueryPage'
+      - $ref: '#/components/parameters/QueryPageSize'
+      - $ref: '#/components/parameters/HeaderXV'
+      - $ref: '#/components/parameters/HeaderXMinV'
+      - $ref: '#/components/parameters/HeaderXFAPIInteractionId'
+      - $ref: '#/components/parameters/HeaderXFAPIAuthDate'
+      - $ref: '#/components/parameters/HeaderXFAPICustomerIPAddress'
+      - $ref: '#/components/parameters/HeaderXCDSClientHeaders'
+      requestBody:
+        $ref: '#/components/requestBodies/RequestAccountIds'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListEnergyAccountBalancesSpecificAccounts200'
+        '400':
+          $ref: '#/components/responses/ListEnergyAccountBalancesSpecificAccounts400'
+        '406':
+          $ref: '#/components/responses/ListEnergyAccountBalancesSpecificAccounts406'
+        '422':
+          $ref: '#/components/responses/ListEnergyAccountBalancesSpecificAccounts422'
+components:
+  parameters:
+    HeaderXFAPIInteractionId:
+      name: x-fapi-interaction-id
+      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
+      in: header
+      schema:
+        type: string
+    HeaderXV:
+      name: x-v
+      description: Version of the API endpoint requested by the client. Must be set to a positive integer. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If the value of [_x-min-v_](#request-headers) is equal to or higher than the value of [_x-v_](#request-headers) then the [_x-min-v_](#request-headers) header should be treated as absent. If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`. See [HTTP Headers](#request-headers).
+      in: header
+      required: true
+      schema:
+        type: string
+    HeaderXFAPICustomerIPAddress:
+      name: x-fapi-customer-ip-address
+      description: The customer's original IP address if the customer is currently logged in to the data recipient. The presence of this header indicates that the API is being called in a customer present context. Not to be included for unauthenticated calls.
+      in: header
+      schema:
+        type: string
+    PathAccountId:
+      name: accountId
+      in: path
+      description: The _accountId_ to obtain data for. _accountId_ values are returned by account list endpoints.
+      required: true
+      schema:
+        $ref: '#/components/schemas/EnergyAccountId'
+    QueryPageSize:
+      name: page-size
+      description: Page size to request. Default is 25 (standard pagination).
+      in: query
+      schema:
+        type: integer
+        default: '25'
+      x-cds-type: PositiveInteger
+    HeaderXCDSClientHeaders:
+      name: x-cds-client-headers
+      description: The customer's original standard http headers [Base64](#common-field-types) encoded, including the original User-Agent header, if the customer is currently logged in to the data recipient. Mandatory for customer present calls. Not required for unattended or unauthenticated calls.
+      in: header
+      x-conditional: true
+      schema:
+        type: string
+      x-cds-type: Base64
+    HeaderXFAPIAuthDate:
+      name: x-fapi-auth-date
+      description: The time when the customer last logged in to the Data Recipient Software Product as described in **[[FAPI-1.0-Baseline]](#nref-FAPI-1-0-Baseline)**. Required for all resource calls (customer present and unattended). Not required for unauthenticated calls.
+      in: header
+      x-conditional: true
+      schema:
+        type: string
+    QueryPage:
+      name: page
+      description: Page of results to request (standard pagination).
+      in: query
+      schema:
+        type: integer
+        default: '1'
+      x-cds-type: PositiveInteger
+    HeaderXMinV:
+      name: x-min-v
+      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
+      in: header
+      schema:
+        type: string
+  schemas:
+    LinksPaginated:
+      type: object
+      required:
+      - self
+      x-conditional:
+      - first
+      - prev
+      - next
+      - last
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+        first:
+          type: string
+          description: URI to the first page of this set. Mandatory if this response is not the first page.
+          x-cds-type: URIString
+        prev:
+          type: string
+          description: URI to the previous page of this set. Mandatory if this response is not the first page.
+          x-cds-type: URIString
+        next:
+          type: string
+          description: URI to the next page of this set. Mandatory if this response is not the last page.
+          x-cds-type: URIString
+        last:
+          type: string
+          description: URI to the last page of this set. Mandatory if this response is not the last page.
+          x-cds-type: URIString
+    EnergyBalanceListResponse:
+      type: object
+      required:
+      - data
+      - links
+      - meta
+      properties:
+        data:
+          type: object
+          required:
+          - balances
+          properties:
+            balances:
+              description: Array of account balances.
+              type: array
+              items:
+                type: object
+                required:
+                - accountId
+                - balance
+                properties:
+                  accountId:
+                    description: Unique identifier for the account.
+                    allOf:
+                    - $ref: '#/components/schemas/EnergyAccountId'
+                  balance:
+                    description: The current balance of the account. A positive value indicates that amount is owing to be paid. A negative value indicates that the account is in credit.
+                    type: string
+                    x-cds-type: AmountString
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
+    EnergyBalanceResponse:
+      type: object
+      required:
+      - data
+      - links
+      properties:
+        data:
+          type: object
+          required:
+          - balance
+          properties:
+            balance:
+              description: The current balance of the account. A positive value indicates that amount is owing to be paid. A negative value indicates that the account is in credit.
+              type: string
+              x-cds-type: AmountString
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Meta:
+      type: object
+    MetaPaginated:
+      type: object
+      required:
+      - totalPages
+      - totalRecords
+      properties:
+        totalRecords:
+          type: integer
+          description: The total number of records in the full set. See [pagination](#pagination).
+          x-cds-type: NaturalNumber
+        totalPages:
+          type: integer
+          description: The total number of pages in the full set. See [pagination](#pagination).
+          x-cds-type: NaturalNumber
+    EnergyAccountId:
+      type: string
+      description: A unique identifier for an Energy account, generated according to [CDR ID Permanence](#id-permanence) requirements.
+      x-cds-type: ASCIIString
+    RequestAccountIdListV1:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: object
+          required:
+          - accountIds
+          properties:
+            accountIds:
+              type: array
+              description: Array of _accountId_ values to obtain data for.
+              items:
+                $ref: '#/components/schemas/EnergyAccountId'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    Links:
+      type: object
+      required:
+      - self
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+    ResponseErrorListV2:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          description: List of errors.
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorV2'
+    ErrorV2:
+      type: object
+      required:
+      - code
+      - title
+      - detail
+      x-conditional:
+      - meta
+      properties:
+        code:
+          type: string
+          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        meta:
+          type: object
+          x-conditional:
+          - urn
+          description: Additional data for customised error codes.
+          properties:
+            urn:
+              type: string
+              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
+  responses:
+    ListEnergyAccountBalancesSpecificAccounts406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyAccountBalance400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyAccountBalancesBulk200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnergyBalanceListResponse'
+    ListEnergyAccountBalancesBulk406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyAccountBalancesSpecificAccounts200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnergyBalanceListResponse'
+    GetEnergyAccountBalance404:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[404 - Unavailable Energy Account](#error-404-unavailable-energy-account)</li><li>[404 - Invalid Energy Account](#error-404-invalid-energy-account)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyAccountBalancesBulk422:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[422 - Invalid Page](#error-422-field-invalid-page)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyAccountBalancesSpecificAccounts400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Page Size](#error-400-field-invalid-page-size)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyAccountBalance406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyAccountBalance200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnergyBalanceResponse'
+    ListEnergyAccountBalancesBulk400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Page Size](#error-400-field-invalid-page-size)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyAccountBalancesSpecificAccounts422:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[422 - Invalid Page](#error-422-field-invalid-page)</li><li>[422 - Unavailable Energy Account](#error-422-unavailable-energy-account)</li><li>[422 - Invalid Energy Account](#error-422-invalid-energy-account)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+  headers:
+    XV:
+      description: The [payload version](#response-headers) that the endpoint has responded with.
+      required: true
+      schema:
+        type: string
+    XFAPIInteractionId:
+      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
+      required: true
+      schema:
+        type: string
+  requestBodies:
+    RequestAccountIds:
+      description: Request payload containing a list of _accountId_ values to obtain data for.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RequestAccountIdListV1'
+      required: true
