@@ -1,0 +1,38 @@
+{
+  "provider": "aer",
+  "sources": [
+    "_original/cdr-energy-api-openapi.json",
+    "_original/cds-common-api-openapi.json"
+  ],
+  "outputs": [
+    "aer-distributed-energy-resources-api-openapi.yml",
+    "aer-electricity-service-points-api-openapi.yml",
+    "aer-electricity-usage-api-openapi.yml",
+    "aer-energy-account-balances-api-openapi.yml",
+    "aer-energy-account-billing-api-openapi.yml",
+    "aer-energy-accounts-api-openapi.yml",
+    "aer-energy-plans-api-openapi.yml",
+    "aer-data-holder-customers-api-openapi.yml",
+    "aer-data-holder-operations-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (2 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "cdr-energy-api-openapi.json: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "cds-common-api-openapi.json: upgraded openapi 3.0.3 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "aer-data-holder-customers-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-data-holder-operations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-distributed-energy-resources-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-electricity-service-points-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-electricity-usage-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-energy-account-balances-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-energy-account-billing-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-energy-accounts-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "aer-energy-plans-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}
