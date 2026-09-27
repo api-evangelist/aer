@@ -121,36 +121,6 @@ paths:
           $ref: '#/components/responses/GetEnergyPlanDetail406'
 components:
   schemas:
-    MeasureUnitEnum:
-      type: string
-      enum:
-      - KWH
-      - KVA
-      - KVAR
-      - KVARH
-      - KW
-      - DAYS
-      - METER
-      - MONTH
-    ResponseErrorListV2:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          description: List of errors.
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorV2'
-    Links:
-      type: object
-      required:
-      - self
-      properties:
-        self:
-          type: string
-          description: Fully qualified link that generated the current response document.
-          x-cds-type: URIString
     EnergyPlanDiscounts:
       type: object
       required:
@@ -241,6 +211,160 @@ components:
               type: string
               x-cds-type: AmountString
               description: The usage amount threshold above which the discount applies.
+    LinksPaginated:
+      type: object
+      required:
+      - self
+      x-conditional:
+      - first
+      - prev
+      - next
+      - last
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+        first:
+          type: string
+          description: URI to the first page of this set. Mandatory if this response is not the first page.
+          x-cds-type: URIString
+        prev:
+          type: string
+          description: URI to the previous page of this set. Mandatory if this response is not the first page.
+          x-cds-type: URIString
+        next:
+          type: string
+          description: URI to the next page of this set. Mandatory if this response is not the last page.
+          x-cds-type: URIString
+        last:
+          type: string
+          description: URI to the last page of this set. Mandatory if this response is not the last page.
+          x-cds-type: URIString
+    Meta:
+      type: object
+    EnergyPlanResponseV3:
+      type: object
+      required:
+      - data
+      - links
+      properties:
+        data:
+          $ref: '#/components/schemas/EnergyPlanDetailV3'
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    EnergyPlanGreenPowerCharges:
+      type: object
+      required:
+      - displayName
+      - scheme
+      - type
+      - tiers
+      properties:
+        displayName:
+          type: string
+          description: The display name of the charge.
+        description:
+          type: string
+          description: The description of the charge.
+        scheme:
+          type: string
+          description: The applicable green power scheme.
+          enum:
+          - GREENPOWER
+          - OTHER
+        type:
+          type: string
+          description: The type of charge.
+          enum:
+          - FIXED_PER_DAY
+          - FIXED_PER_WEEK
+          - FIXED_PER_MONTH
+          - FIXED_PER_UNIT
+          - PERCENT_OF_USE
+          - PERCENT_OF_BILL
+        tiers:
+          description: Array of charge tiers based on the percentage of green power used for the period implied by the type. Array is in order of increasing percentage of green power.
+          type: array
+          items:
+            type: object
+            required:
+            - percentGreen
+            x-conditional:
+            - rate
+            - amount
+            properties:
+              percentGreen:
+                type: string
+                x-cds-type: RateString
+                description: The upper percentage of green power used applicable for this tier.
+              rate:
+                type: string
+                x-cds-type: RateString
+                description: The rate of the charge if the type implies the application of a rate.
+              amount:
+                type: string
+                x-cds-type: AmountString
+                description: The amount of the charge if the type implies the application of a fixed amount.
+    EnergyPlanFees:
+      type: object
+      required:
+      - type
+      - term
+      x-conditional:
+      - amount
+      - rate
+      properties:
+        type:
+          type: string
+          description: The type of the fee.
+          enum:
+          - EXIT
+          - ESTABLISHMENT
+          - LATE_PAYMENT
+          - DISCONNECTION
+          - DISCONNECT_MOVE_OUT
+          - DISCONNECT_NON_PAY
+          - RECONNECTION
+          - CONNECTION
+          - PAYMENT_PROCESSING
+          - CC_PROCESSING
+          - CHEQUE_DISHONOUR
+          - DD_DISHONOUR
+          - MEMBERSHIP
+          - CONTRIBUTION
+          - PAPER_BILL
+          - OTHER
+        term:
+          type: string
+          description: The term of the fee.
+          enum:
+          - FIXED
+          - 1_YEAR
+          - 2_YEAR
+          - 3_YEAR
+          - 4_YEAR
+          - 5_YEAR
+          - PERCENT_OF_BILL
+          - ANNUAL
+          - DAILY
+          - WEEKLY
+          - MONTHLY
+          - BIANNUAL
+          - VARIABLE
+        amount:
+          type: string
+          x-cds-type: AmountString
+          description: The fee amount. Required if _term_ is not `PERCENT_OF_BILL`.
+        rate:
+          type: string
+          x-cds-type: RateString
+          description: The fee rate. Required if _term_ is `PERCENT_OF_BILL`.
+        description:
+          type: string
+          description: A description of the fee.
     EnergyPlan:
       type: object
       required:
@@ -347,29 +471,42 @@ components:
               type: array
               items:
                 type: string
-    Meta:
-      type: object
-    EnergyPlanListResponse:
+    Links:
       type: object
       required:
-      - data
-      - links
+      - self
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+    ErrorV2:
+      type: object
+      required:
+      - code
+      - title
+      - detail
+      x-conditional:
       - meta
       properties:
-        data:
-          type: object
-          required:
-          - plans
-          properties:
-            plans:
-              description: Array of plans.
-              type: array
-              items:
-                $ref: '#/components/schemas/EnergyPlan'
-        links:
-          $ref: '#/components/schemas/LinksPaginated'
+        code:
+          type: string
+          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
         meta:
-          $ref: '#/components/schemas/MetaPaginated'
+          type: object
+          x-conditional:
+          - urn
+          description: Additional data for customised error codes.
+          properties:
+            urn:
+              type: string
+              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
     EnergyPlanControlledLoadV2:
       type: object
       required:
@@ -524,29 +661,27 @@ components:
                 - OFF_PEAK
                 - SHOULDER
                 - SOLAR_SPONGE
-    EnergyPlanIncentives:
+    EnergyPlanListResponse:
       type: object
       required:
-      - displayName
-      - description
-      - category
+      - data
+      - links
+      - meta
       properties:
-        displayName:
-          type: string
-          description: The display name of the incentive.
-        description:
-          type: string
-          description: The description of the incentive.
-        category:
-          type: string
-          description: The type of the incentive.
-          enum:
-          - GIFT
-          - ACCOUNT_CREDIT
-          - OTHER
-        eligibility:
-          type: string
-          description: A display message outlining an eligibility criteria that may apply.
+        data:
+          type: object
+          required:
+          - plans
+          properties:
+            plans:
+              description: Array of plans.
+              type: array
+              items:
+                $ref: '#/components/schemas/EnergyPlan'
+        links:
+          $ref: '#/components/schemas/LinksPaginated'
+        meta:
+          $ref: '#/components/schemas/MetaPaginated'
     EnergyPlanDetailV3:
       allOf:
       - $ref: '#/components/schemas/EnergyPlan'
@@ -590,163 +725,177 @@ components:
             description: The details of the terms for the supply of electricity under this plan. Is mandatory if _fuelType_ is set to `ELECTRICITY` or `DUAL`.
             allOf:
             - $ref: '#/components/schemas/EnergyPlanContractFullV3'
-    EnergyPlanContractFullV3:
-      allOf:
-      - $ref: '#/components/schemas/EnergyPlanContractV3'
-      - type: object
-        required:
-        - billFrequency
-        x-conditional:
-        - benefitPeriod
-        - variation
-        - coolingOffDays
-        properties:
-          termType:
-            type: string
-            description: The term for the contract. If absent assumes no specified term.
-            enum:
-            - 1_YEAR
-            - 2_YEAR
-            - 3_YEAR
-            - 4_YEAR
-            - 5_YEAR
-            - ONGOING
-            - OTHER
-          benefitPeriod:
-            type: string
-            description: Description of the benefit period. Should only be present if _termType_ has the value `ONGOING`.
-          terms:
-            type: string
-            description: Free text description of the terms for the contract.
-          meterTypes:
-            description: An array of the meter types that this contract is available for.
-            type: array
-            items:
-              type: string
-          coolingOffDays:
-            type: integer
-            x-cds-type: PositiveInteger
-            description: Number of days in the cooling off period for the contract. Mandatory for plans with type of `MARKET`.
-          billFrequency:
-            description: An array of the available billing schedules for this contract. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax).
-            type: array
-            items:
-              type: string
-    EnergyPlanContractV3:
+    ResponseErrorListV2:
       type: object
       required:
-      - pricingModel
-      - isFixed
-      - paymentOption
-      - tariffPeriod
+      - errors
+      properties:
+        errors:
+          description: List of errors.
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorV2'
+    MetaPaginated:
+      type: object
+      required:
+      - totalPages
+      - totalRecords
+      properties:
+        totalRecords:
+          type: integer
+          description: The total number of records in the full set. See [pagination](#pagination).
+          x-cds-type: NaturalNumber
+        totalPages:
+          type: integer
+          description: The total number of pages in the full set. See [pagination](#pagination).
+          x-cds-type: NaturalNumber
+    EnergyPlanSolarFeedInTariffV3:
+      type: object
+      required:
+      - displayName
+      - scheme
+      - payerType
+      - tariffUType
       x-conditional:
-      - timeZone
-      - variation
-      - controlledLoad
+      - singleTariff
+      - timeVaryingTariffs
       properties:
-        additionalFeeInformation:
+        displayName:
           type: string
-          description: Free text field containing additional information of the fees for this contract.
-        pricingModel:
+          description: The name of the tariff.
+        description:
           type: string
-          description: 'The pricing model for the contract. Contracts for gas must use `SINGLE_RATE`. Note that the detail for the enumeration values are:<ul><li>`SINGLE_RATE`: all energy usage is charged at a single unit rate no matter when it is consumed. Multiple unit rates may exist that correspond to varying volumes of usage i.e. a ''block'' or ''step'' tariff (first 50kWh @ X cents, next 50kWh at Y cents etc.)</li><li>`SINGLE_RATE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`TIME_OF_USE`: energy usage is charged at unit rates that vary dependent on time of day and day of week that the energy is consumed</li><li>`TIME_OF_USE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`FLEXIBLE`: energy usage is charged at unit rates that vary based on external factors</li><li>`FLEXIBLE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`QUOTA`: all energy usage is charged at a single fixed rate, up to a specified usage quota/allowance. All excess usage beyond the allowance is then charged at a single unit rate. i.e. $50/month for up to 150kWh included usage.</li></ul>'
+          description: A description of the tariff.
+        startDate:
+          description: The start date of the application of the feed in tariff.
+          type: string
+          x-cds-type: DateString
+        endDate:
+          description: The end date of the application of the feed in tariff.
+          type: string
+          x-cds-type: DateString
+        scheme:
+          type: string
+          description: The applicable scheme.
           enum:
-          - SINGLE_RATE
-          - SINGLE_RATE_CONT_LOAD
-          - TIME_OF_USE
-          - TIME_OF_USE_CONT_LOAD
-          - FLEXIBLE
-          - FLEXIBLE_CONT_LOAD
-          - QUOTA
-        timeZone:
+          - PREMIUM
+          - CURRENT
+          - VARIABLE
+          - OTHER
+        payerType:
           type: string
-          description: Required if _pricingModel_ is set to `TIME_OF_USE`. Defines the time zone to use for calculation of the time of use thresholds. Defaults to `AEST` if absent.
-          default: AEST
+          description: The type of the payer.
           enum:
-          - LOCAL
-          - AEST
-        isFixed:
-          type: boolean
-          description: Flag indicating whether prices are fixed or variable.
-        variation:
+          - GOVERNMENT
+          - RETAILER
+        tariffUType:
           type: string
-          description: Free text description of price variation policy and conditions for the contract. Mandatory if _isFixed_ is `false`.
-        onExpiryDescription:
-          type: string
-          description: Free text field that describes what will occur on or prior to expiry of the fixed contract term or benefit period.
-        paymentOption:
-          description: Payment options for this contract.
-          type: array
-          items:
-            type: string
-            enum:
-            - PAPER_BILL
-            - CREDIT_CARD
-            - DIRECT_DEBIT
-            - BPAY
-            - OTHER
-        intrinsicGreenPower:
-          description: Describes intrinsic green power for the plan. If present then the plan includes a percentage of green power in the base plan. Should not be present for gas contracts.
+          description: Reference to the applicable tariff structure.
+          enum:
+          - singleTariff
+          - timeVaryingTariffs
+        singleTariff:
           type: object
+          description: Represents a constant tariff. Mandatory if _tariffUType_ is set to `singleTariff`.
           required:
-          - greenPercentage
+          - rates
           properties:
-            greenPercentage:
+            rates:
+              description: Array of feed in rates.
+              type: array
+              items:
+                type: object
+                required:
+                - unitPrice
+                properties:
+                  unitPrice:
+                    type: string
+                    x-cds-type: AmountString
+                    description: Unit price of usage per measure unit (exclusive of GST).
+                  measureUnit:
+                    type: string
+                    description: The measurement unit of rate. Assumed to be `KWH` if absent.
+                    default: KWH
+                    allOf:
+                    - $ref: '#/components/schemas/MeasureUnitEnum'
+                  volume:
+                    type: number
+                    description: Volume that this rate applies to. Only applicable for 'stepped' rates where different rates apply for different volumes of usage in a period.
+            period:
               type: string
-              x-cds-type: RateString
-              description: Percentage of green power intrinsically included in the plan.
-        controlledLoad:
-          description: Required if pricing model is `SINGLE_RATE_CONT_LOAD` or `TIME_OF_USE_CONT_LOAD` or `FLEXIBLE_CONT_LOAD`.
+              x-cds-type: ExternalRef
+              description: Usage period for which the block rate applies. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax). Defaults to `P1Y` if absent.
+              default: P1Y
+        timeVaryingTariffs:
           type: array
+          description: Represents a tariff based on time of day. Mandatory if _tariffUType_ is set to `timeVaryingTariffs`.
           items:
-            $ref: '#/components/schemas/EnergyPlanControlledLoadV2'
-        incentives:
-          description: Optional list of incentives available for the contract.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanIncentives'
-        discounts:
-          description: Optional list of discounts available for the contract.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanDiscounts'
-        greenPowerCharges:
-          description: Optional list of charges applicable to green power.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanGreenPowerCharges'
-        eligibility:
-          description: Eligibility restrictions or requirements.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanEligibility'
-        fees:
-          description: An array of fees applicable to the plan.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanFees'
-        solarFeedInTariff:
-          description: Array of feed in tariffs for solar power.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanSolarFeedInTariffV3'
-        tariffPeriod:
-          description: Array of tariffs that apply to periods throughout the year.
-          type: array
-          items:
-            $ref: '#/components/schemas/EnergyPlanTariffPeriodV2'
-    EnergyPlanResponseV3:
-      type: object
-      required:
-      - data
-      - links
-      properties:
-        data:
-          $ref: '#/components/schemas/EnergyPlanDetailV3'
-        links:
-          $ref: '#/components/schemas/Links'
-        meta:
-          $ref: '#/components/schemas/Meta'
+            type: object
+            required:
+            - timeVariations
+            - displayName
+            properties:
+              type:
+                type: string
+                description: The type of the charging time period. If absent applies to all periods.
+                enum:
+                - PEAK
+                - OFF_PEAK
+                - SHOULDER
+              displayName:
+                type: string
+                description: Display name of the tariff.
+              rates:
+                description: Array of feed in rates.
+                type: array
+                items:
+                  type: object
+                  required:
+                  - unitPrice
+                  properties:
+                    unitPrice:
+                      type: string
+                      x-cds-type: AmountString
+                      description: Unit price of usage per measure unit (exclusive of GST).
+                    measureUnit:
+                      type: string
+                      description: The measurement unit of rate. Assumed to be `KWH` if absent.
+                      default: KWH
+                      allOf:
+                      - $ref: '#/components/schemas/MeasureUnitEnum'
+                    volume:
+                      type: number
+                      description: Volume that this rate applies to. Only applicable for 'stepped' rates where different rates apply for different volumes of usage in a period.
+              period:
+                type: string
+                x-cds-type: ExternalRef
+                description: Usage period for which the block rate applies. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax). Defaults to `P1Y` if absent.
+                default: P1Y
+              timeVariations:
+                description: Array of time windows for which this tariff is applicable.
+                type: array
+                items:
+                  type: object
+                  required:
+                  - days
+                  properties:
+                    days:
+                      description: The days that this time window applies to. At least one entry required.
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/EnergyDaysEnum'
+                    startTime:
+                      description: The beginning of the time window per day for which the tariff applies. If absent assumes start of day (i.e. midnight). Formatted according to [ISO 8601 Times](https://en.wikipedia.org/wiki/ISO_8601#Times). If the time is provided without a UTC offset, the time zone will be determined by the value of EnergyPlanContract.timeZone.
+                      type: string
+                      x-cds-type: ExternalRef
+                    endTime:
+                      description: The end of the time window per day for which the tariff applies. If absent assumes end of day (i.e. one second before midnight). Formatted according to [ISO 8601 Times](https://en.wikipedia.org/wiki/ISO_8601#Times). If the time is provided without a UTC offset, the time zone will be determined by the value of EnergyPlanContract.timeZone.
+                      type: string
+                      x-cds-type: ExternalRef
+    EnergyPlanId:
+      type: string
+      description: The unique identifier for the Energy plan.
+      x-cds-type: ASCIIString
     EnergyPlanTariffPeriodV2:
       type: object
       required:
@@ -1010,288 +1159,82 @@ components:
                 - DAY
                 - MONTH
                 - TARIFF_PERIOD
-    LinksPaginated:
-      type: object
-      required:
-      - self
-      x-conditional:
-      - first
-      - prev
-      - next
-      - last
-      properties:
-        self:
-          type: string
-          description: Fully qualified link that generated the current response document.
-          x-cds-type: URIString
-        first:
-          type: string
-          description: URI to the first page of this set. Mandatory if this response is not the first page.
-          x-cds-type: URIString
-        prev:
-          type: string
-          description: URI to the previous page of this set. Mandatory if this response is not the first page.
-          x-cds-type: URIString
-        next:
-          type: string
-          description: URI to the next page of this set. Mandatory if this response is not the last page.
-          x-cds-type: URIString
-        last:
-          type: string
-          description: URI to the last page of this set. Mandatory if this response is not the last page.
-          x-cds-type: URIString
-    EnergyDaysEnum:
+    EnergyPlanContractFullV3:
+      allOf:
+      - $ref: '#/components/schemas/EnergyPlanContractV3'
+      - type: object
+        required:
+        - billFrequency
+        x-conditional:
+        - benefitPeriod
+        - variation
+        - coolingOffDays
+        properties:
+          termType:
+            type: string
+            description: The term for the contract. If absent assumes no specified term.
+            enum:
+            - 1_YEAR
+            - 2_YEAR
+            - 3_YEAR
+            - 4_YEAR
+            - 5_YEAR
+            - ONGOING
+            - OTHER
+          benefitPeriod:
+            type: string
+            description: Description of the benefit period. Should only be present if _termType_ has the value `ONGOING`.
+          terms:
+            type: string
+            description: Free text description of the terms for the contract.
+          meterTypes:
+            description: An array of the meter types that this contract is available for.
+            type: array
+            items:
+              type: string
+          coolingOffDays:
+            type: integer
+            x-cds-type: PositiveInteger
+            description: Number of days in the cooling off period for the contract. Mandatory for plans with type of `MARKET`.
+          billFrequency:
+            description: An array of the available billing schedules for this contract. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax).
+            type: array
+            items:
+              type: string
+    MeasureUnitEnum:
       type: string
       enum:
-      - SUN
-      - MON
-      - TUE
-      - WED
-      - THU
-      - FRI
-      - SAT
-      - PUBLIC_HOLIDAYS
-    MetaPaginated:
-      type: object
-      required:
-      - totalPages
-      - totalRecords
-      properties:
-        totalRecords:
-          type: integer
-          description: The total number of records in the full set. See [pagination](#pagination).
-          x-cds-type: NaturalNumber
-        totalPages:
-          type: integer
-          description: The total number of pages in the full set. See [pagination](#pagination).
-          x-cds-type: NaturalNumber
-    EnergyPlanId:
-      type: string
-      description: The unique identifier for the Energy plan.
-      x-cds-type: ASCIIString
-    ErrorV2:
-      type: object
-      required:
-      - code
-      - title
-      - detail
-      x-conditional:
-      - meta
-      properties:
-        code:
-          type: string
-          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
-        title:
-          type: string
-          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
-        detail:
-          type: string
-          description: A human-readable explanation specific to this occurrence of the problem.
-        meta:
-          type: object
-          x-conditional:
-          - urn
-          description: Additional data for customised error codes.
-          properties:
-            urn:
-              type: string
-              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
-    EnergyPlanSolarFeedInTariffV3:
+      - KWH
+      - KVA
+      - KVAR
+      - KVARH
+      - KW
+      - DAYS
+      - METER
+      - MONTH
+    EnergyPlanIncentives:
       type: object
       required:
       - displayName
-      - scheme
-      - payerType
-      - tariffUType
-      x-conditional:
-      - singleTariff
-      - timeVaryingTariffs
+      - description
+      - category
       properties:
         displayName:
           type: string
-          description: The name of the tariff.
+          description: The display name of the incentive.
         description:
           type: string
-          description: A description of the tariff.
-        startDate:
-          description: The start date of the application of the feed in tariff.
+          description: The description of the incentive.
+        category:
           type: string
-          x-cds-type: DateString
-        endDate:
-          description: The end date of the application of the feed in tariff.
-          type: string
-          x-cds-type: DateString
-        scheme:
-          type: string
-          description: The applicable scheme.
+          description: The type of the incentive.
           enum:
-          - PREMIUM
-          - CURRENT
-          - VARIABLE
+          - GIFT
+          - ACCOUNT_CREDIT
           - OTHER
-        payerType:
+        eligibility:
           type: string
-          description: The type of the payer.
-          enum:
-          - GOVERNMENT
-          - RETAILER
-        tariffUType:
-          type: string
-          description: Reference to the applicable tariff structure.
-          enum:
-          - singleTariff
-          - timeVaryingTariffs
-        singleTariff:
-          type: object
-          description: Represents a constant tariff. Mandatory if _tariffUType_ is set to `singleTariff`.
-          required:
-          - rates
-          properties:
-            rates:
-              description: Array of feed in rates.
-              type: array
-              items:
-                type: object
-                required:
-                - unitPrice
-                properties:
-                  unitPrice:
-                    type: string
-                    x-cds-type: AmountString
-                    description: Unit price of usage per measure unit (exclusive of GST).
-                  measureUnit:
-                    type: string
-                    description: The measurement unit of rate. Assumed to be `KWH` if absent.
-                    default: KWH
-                    allOf:
-                    - $ref: '#/components/schemas/MeasureUnitEnum'
-                  volume:
-                    type: number
-                    description: Volume that this rate applies to. Only applicable for 'stepped' rates where different rates apply for different volumes of usage in a period.
-            period:
-              type: string
-              x-cds-type: ExternalRef
-              description: Usage period for which the block rate applies. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax). Defaults to `P1Y` if absent.
-              default: P1Y
-        timeVaryingTariffs:
-          type: array
-          description: Represents a tariff based on time of day. Mandatory if _tariffUType_ is set to `timeVaryingTariffs`.
-          items:
-            type: object
-            required:
-            - timeVariations
-            - displayName
-            properties:
-              type:
-                type: string
-                description: The type of the charging time period. If absent applies to all periods.
-                enum:
-                - PEAK
-                - OFF_PEAK
-                - SHOULDER
-              displayName:
-                type: string
-                description: Display name of the tariff.
-              rates:
-                description: Array of feed in rates.
-                type: array
-                items:
-                  type: object
-                  required:
-                  - unitPrice
-                  properties:
-                    unitPrice:
-                      type: string
-                      x-cds-type: AmountString
-                      description: Unit price of usage per measure unit (exclusive of GST).
-                    measureUnit:
-                      type: string
-                      description: The measurement unit of rate. Assumed to be `KWH` if absent.
-                      default: KWH
-                      allOf:
-                      - $ref: '#/components/schemas/MeasureUnitEnum'
-                    volume:
-                      type: number
-                      description: Volume that this rate applies to. Only applicable for 'stepped' rates where different rates apply for different volumes of usage in a period.
-              period:
-                type: string
-                x-cds-type: ExternalRef
-                description: Usage period for which the block rate applies. Formatted according to [ISO 8601 Durations](https://en.wikipedia.org/wiki/ISO_8601#Durations) (excludes recurrence syntax). Defaults to `P1Y` if absent.
-                default: P1Y
-              timeVariations:
-                description: Array of time windows for which this tariff is applicable.
-                type: array
-                items:
-                  type: object
-                  required:
-                  - days
-                  properties:
-                    days:
-                      description: The days that this time window applies to. At least one entry required.
-                      type: array
-                      items:
-                        $ref: '#/components/schemas/EnergyDaysEnum'
-                    startTime:
-                      description: The beginning of the time window per day for which the tariff applies. If absent assumes start of day (i.e. midnight). Formatted according to [ISO 8601 Times](https://en.wikipedia.org/wiki/ISO_8601#Times). If the time is provided without a UTC offset, the time zone will be determined by the value of EnergyPlanContract.timeZone.
-                      type: string
-                      x-cds-type: ExternalRef
-                    endTime:
-                      description: The end of the time window per day for which the tariff applies. If absent assumes end of day (i.e. one second before midnight). Formatted according to [ISO 8601 Times](https://en.wikipedia.org/wiki/ISO_8601#Times). If the time is provided without a UTC offset, the time zone will be determined by the value of EnergyPlanContract.timeZone.
-                      type: string
-                      x-cds-type: ExternalRef
-    EnergyPlanGreenPowerCharges:
-      type: object
-      required:
-      - displayName
-      - scheme
-      - type
-      - tiers
-      properties:
-        displayName:
-          type: string
-          description: The display name of the charge.
-        description:
-          type: string
-          description: The description of the charge.
-        scheme:
-          type: string
-          description: The applicable green power scheme.
-          enum:
-          - GREENPOWER
-          - OTHER
-        type:
-          type: string
-          description: The type of charge.
-          enum:
-          - FIXED_PER_DAY
-          - FIXED_PER_WEEK
-          - FIXED_PER_MONTH
-          - FIXED_PER_UNIT
-          - PERCENT_OF_USE
-          - PERCENT_OF_BILL
-        tiers:
-          description: Array of charge tiers based on the percentage of green power used for the period implied by the type. Array is in order of increasing percentage of green power.
-          type: array
-          items:
-            type: object
-            required:
-            - percentGreen
-            x-conditional:
-            - rate
-            - amount
-            properties:
-              percentGreen:
-                type: string
-                x-cds-type: RateString
-                description: The upper percentage of green power used applicable for this tier.
-              rate:
-                type: string
-                x-cds-type: RateString
-                description: The rate of the charge if the type implies the application of a rate.
-              amount:
-                type: string
-                x-cds-type: AmountString
-                description: The amount of the charge if the type implies the application of a fixed amount.
+          description: A display message outlining an eligibility criteria that may apply.
     EnergyPlanEligibility:
       type: object
       required:
@@ -1329,133 +1272,127 @@ components:
         description:
           type: string
           description: A description of the eligibility restriction.
-    EnergyPlanFees:
+    EnergyDaysEnum:
+      type: string
+      enum:
+      - SUN
+      - MON
+      - TUE
+      - WED
+      - THU
+      - FRI
+      - SAT
+      - PUBLIC_HOLIDAYS
+    EnergyPlanContractV3:
       type: object
       required:
-      - type
-      - term
+      - pricingModel
+      - isFixed
+      - paymentOption
+      - tariffPeriod
       x-conditional:
-      - amount
-      - rate
+      - timeZone
+      - variation
+      - controlledLoad
       properties:
-        type:
+        additionalFeeInformation:
           type: string
-          description: The type of the fee.
+          description: Free text field containing additional information of the fees for this contract.
+        pricingModel:
+          type: string
+          description: 'The pricing model for the contract. Contracts for gas must use `SINGLE_RATE`. Note that the detail for the enumeration values are:<ul><li>`SINGLE_RATE`: all energy usage is charged at a single unit rate no matter when it is consumed. Multiple unit rates may exist that correspond to varying volumes of usage i.e. a ''block'' or ''step'' tariff (first 50kWh @ X cents, next 50kWh at Y cents etc.)</li><li>`SINGLE_RATE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`TIME_OF_USE`: energy usage is charged at unit rates that vary dependent on time of day and day of week that the energy is consumed</li><li>`TIME_OF_USE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`FLEXIBLE`: energy usage is charged at unit rates that vary based on external factors</li><li>`FLEXIBLE_CONT_LOAD`: as above, but with an additional, separate unit rate charged for all energy usage from a controlled load i.e. separately metered appliance like hot water service, pool pump etc.</li><li>`QUOTA`: all energy usage is charged at a single fixed rate, up to a specified usage quota/allowance. All excess usage beyond the allowance is then charged at a single unit rate. i.e. $50/month for up to 150kWh included usage.</li></ul>'
           enum:
-          - EXIT
-          - ESTABLISHMENT
-          - LATE_PAYMENT
-          - DISCONNECTION
-          - DISCONNECT_MOVE_OUT
-          - DISCONNECT_NON_PAY
-          - RECONNECTION
-          - CONNECTION
-          - PAYMENT_PROCESSING
-          - CC_PROCESSING
-          - CHEQUE_DISHONOUR
-          - DD_DISHONOUR
-          - MEMBERSHIP
-          - CONTRIBUTION
-          - PAPER_BILL
-          - OTHER
-        term:
+          - SINGLE_RATE
+          - SINGLE_RATE_CONT_LOAD
+          - TIME_OF_USE
+          - TIME_OF_USE_CONT_LOAD
+          - FLEXIBLE
+          - FLEXIBLE_CONT_LOAD
+          - QUOTA
+        timeZone:
           type: string
-          description: The term of the fee.
+          description: Required if _pricingModel_ is set to `TIME_OF_USE`. Defines the time zone to use for calculation of the time of use thresholds. Defaults to `AEST` if absent.
+          default: AEST
           enum:
-          - FIXED
-          - 1_YEAR
-          - 2_YEAR
-          - 3_YEAR
-          - 4_YEAR
-          - 5_YEAR
-          - PERCENT_OF_BILL
-          - ANNUAL
-          - DAILY
-          - WEEKLY
-          - MONTHLY
-          - BIANNUAL
-          - VARIABLE
-        amount:
+          - LOCAL
+          - AEST
+        isFixed:
+          type: boolean
+          description: Flag indicating whether prices are fixed or variable.
+        variation:
           type: string
-          x-cds-type: AmountString
-          description: The fee amount. Required if _term_ is not `PERCENT_OF_BILL`.
-        rate:
+          description: Free text description of price variation policy and conditions for the contract. Mandatory if _isFixed_ is `false`.
+        onExpiryDescription:
           type: string
-          x-cds-type: RateString
-          description: The fee rate. Required if _term_ is `PERCENT_OF_BILL`.
-        description:
-          type: string
-          description: A description of the fee.
-  headers:
-    XV:
-      description: The [payload version](#response-headers) that the endpoint has responded with.
-      required: true
+          description: Free text field that describes what will occur on or prior to expiry of the fixed contract term or benefit period.
+        paymentOption:
+          description: Payment options for this contract.
+          type: array
+          items:
+            type: string
+            enum:
+            - PAPER_BILL
+            - CREDIT_CARD
+            - DIRECT_DEBIT
+            - BPAY
+            - OTHER
+        intrinsicGreenPower:
+          description: Describes intrinsic green power for the plan. If present then the plan includes a percentage of green power in the base plan. Should not be present for gas contracts.
+          type: object
+          required:
+          - greenPercentage
+          properties:
+            greenPercentage:
+              type: string
+              x-cds-type: RateString
+              description: Percentage of green power intrinsically included in the plan.
+        controlledLoad:
+          description: Required if pricing model is `SINGLE_RATE_CONT_LOAD` or `TIME_OF_USE_CONT_LOAD` or `FLEXIBLE_CONT_LOAD`.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanControlledLoadV2'
+        incentives:
+          description: Optional list of incentives available for the contract.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanIncentives'
+        discounts:
+          description: Optional list of discounts available for the contract.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanDiscounts'
+        greenPowerCharges:
+          description: Optional list of charges applicable to green power.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanGreenPowerCharges'
+        eligibility:
+          description: Eligibility restrictions or requirements.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanEligibility'
+        fees:
+          description: An array of fees applicable to the plan.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanFees'
+        solarFeedInTariff:
+          description: Array of feed in tariffs for solar power.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanSolarFeedInTariffV3'
+        tariffPeriod:
+          description: Array of tariffs that apply to periods throughout the year.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyPlanTariffPeriodV2'
+  parameters:
+    HeaderXMinV:
+      name: x-min-v
+      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
+      in: header
       schema:
         type: string
-  responses:
-    GetEnergyPlanDetail200:
-      description: Successful response
-      headers:
-        x-v:
-          $ref: '#/components/headers/XV'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnergyPlanResponseV3'
-    GetEnergyPlanDetail400:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    GetEnergyPlanDetail406:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    ListEnergyPlans406:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    ListEnergyPlans400:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Date](#error-400-field-invalid-date-time)</li><li>[400 - Invalid Page Size](#error-400-field-invalid-page-size)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    GetEnergyPlanDetail404:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[404 - Invalid Resource](#error-404-resource-invalid)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    ListEnergyPlans422:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[422 - Invalid Page](#error-422-field-invalid-page)</li></ul>
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    ListEnergyPlans200:
-      description: Successful response
-      headers:
-        x-v:
-          $ref: '#/components/headers/XV'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/EnergyPlanListResponse'
-  parameters:
-    QueryPageSize:
-      name: page-size
-      description: Page size to request. Default is 25 (standard pagination).
-      in: query
-      schema:
-        type: integer
-        default: '25'
-      x-cds-type: PositiveInteger
     QueryPage:
       name: page
       description: Page of results to request (standard pagination).
@@ -1471,9 +1408,72 @@ components:
       required: true
       schema:
         type: string
-    HeaderXMinV:
-      name: x-min-v
-      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
-      in: header
+    QueryPageSize:
+      name: page-size
+      description: Page size to request. Default is 25 (standard pagination).
+      in: query
+      schema:
+        type: integer
+        default: '25'
+      x-cds-type: PositiveInteger
+  headers:
+    XV:
+      description: The [payload version](#response-headers) that the endpoint has responded with.
+      required: true
       schema:
         type: string
+  responses:
+    GetEnergyPlanDetail404:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[404 - Invalid Resource](#error-404-resource-invalid)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyPlanDetail406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyPlans400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Date](#error-400-field-invalid-date-time)</li><li>[400 - Invalid Page Size](#error-400-field-invalid-page-size)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    ListEnergyPlans406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyPlanDetail200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnergyPlanResponseV3'
+    ListEnergyPlans200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EnergyPlanListResponse'
+    ListEnergyPlans422:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[422 - Invalid Page](#error-422-field-invalid-page)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetEnergyPlanDetail400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
