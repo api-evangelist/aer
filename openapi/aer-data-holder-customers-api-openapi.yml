@@ -91,59 +91,28 @@ paths:
       - common:customer.detail:read
       x-version: '2'
 components:
-  parameters:
-    HeaderXMinV:
-      name: x-min-v
-      in: header
-      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
-      schema:
-        type: string
-    HeaderXFAPICustomerIPAddress:
-      name: x-fapi-customer-ip-address
-      in: header
-      description: The customer's original IP address if the customer is currently logged in to the Data Recipient Software Product. The presence of this header indicates that the API is being called in a customer present context. Not to be included for unauthenticated calls.
-      schema:
-        type: string
-    HeaderXV:
-      name: x-v
-      in: header
-      description: Version of the API endpoint requested by the client. Must be set to a positive integer. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If the value of [_x-min-v_](#request-headers) is equal to or higher than the value of [_x-v_](#request-headers) then the [_x-min-v_](#request-headers) header should be treated as absent. If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`. See [HTTP Headers](#request-headers).
-      required: true
-      schema:
-        type: string
-    HeaderXCDSClientHeaders:
-      name: x-cds-client-headers
-      in: header
-      description: The customer's original standard http headers [Base64](#common-field-types) encoded, including the original User-Agent header, if the customer is currently logged in to the Data Recipient Software Product. Mandatory for customer present calls. Not required for unattended or unauthenticated calls.
-      schema:
-        type: string
-      x-conditional: true
-      x-cds-type: Base64
-    HeaderXFAPIAuthDate:
-      name: x-fapi-auth-date
-      in: header
-      description: The time when the customer last logged in to the Data Recipient Software Product as described in **[[FAPI-1.0-Baseline]](#nref-FAPI-1-0-Baseline)**. Required for all resource calls (customer present and unattended). Not required for unauthenticated calls.
-      schema:
-        type: string
-      x-conditional: true
-    HeaderXFAPIInteractionId:
-      name: x-fapi-interaction-id
-      in: header
-      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
-      schema:
-        type: string
-  headers:
-    XV:
-      description: The [payload version](#response-headers) that the endpoint has responded with.
-      required: true
-      schema:
-        type: string
-    XFAPIInteractionId:
-      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
-      required: true
-      schema:
-        type: string
   schemas:
+    CommonEmailAddress:
+      required:
+      - address
+      - purpose
+      type: object
+      properties:
+        isPreferred:
+          type: boolean
+          description: May be `true` for one and only one email record in the collection. Denotes the default email address.
+        purpose:
+          type: string
+          description: The purpose for the email, as specified by the customer.
+          enum:
+          - HOME
+          - OTHER
+          - UNSPECIFIED
+          - WORK
+        address:
+          type: string
+          description: A correctly formatted email address, as defined by the addr-spec format in **[[RFC5322]](#nref-RFC5322)**.
+          x-cds-type: ExternalRef
     CommonOrganisationDetailV2:
       allOf:
       - $ref: '#/components/schemas/CommonOrganisation'
@@ -156,66 +125,113 @@ components:
             description: Array is mandatory but may be empty if no valid addresses are held. One and only one address may have the purpose of `REGISTERED`. Zero or one, and no more than one, record may have the purpose of `MAIL`. If zero then the `REGISTERED` address is to be used for mail.
             items:
               $ref: '#/components/schemas/CommonPhysicalAddressWithPurpose'
-    CommonPhysicalAddress:
-      required:
-      - addressUType
+    ErrorV2:
       type: object
-      properties:
-        addressUType:
-          type: string
-          description: The type of address object present.
-          enum:
-          - paf
-          - simple
-        simple:
-          $ref: '#/components/schemas/CommonSimpleAddress'
-        paf:
-          $ref: '#/components/schemas/CommonPAFAddress'
+      required:
+      - code
+      - title
+      - detail
       x-conditional:
-      - simple
-      - paf
-    CommonPhoneNumber:
+      - meta
+      properties:
+        code:
+          type: string
+          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        meta:
+          type: object
+          x-conditional:
+          - urn
+          description: Additional data for customised error codes.
+          properties:
+            urn:
+              type: string
+              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
+    ResponseErrorListV2:
+      type: object
       required:
-      - fullNumber
-      - number
-      - purpose
+      - errors
+      properties:
+        errors:
+          description: List of errors.
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorV2'
+    CommonPerson:
+      required:
+      - lastName
+      - middleNames
       type: object
       properties:
-        isPreferred:
-          type: boolean
-          description: May be `true` for one and only one entry to indicate the preferred phone number. Assumed to be `false` if not present.
-          default: false
-        purpose:
+        lastUpdateTime:
           type: string
-          description: The purpose of the number as specified by the customer.
-          enum:
-          - HOME
-          - INTERNATIONAL
-          - MOBILE
-          - OTHER
-          - UNSPECIFIED
-          - WORK
-        countryCode:
+          description: The date and time that this record was last updated by the customer. If no update has occurred then this date should reflect the initial creation date for the data.
+          x-cds-type: DateTimeString
+        firstName:
           type: string
-          description: If absent, assumed to be Australia (`+61`). The `+` should be included.
-          default: '+61'
-        areaCode:
+          description: For people with single names this field need not be present. The single name should be in the _lastName_ field. Where a data holder cannot determine first and middle names from a collection of given names, a single string representing all given names **MAY** be provided.
+        lastName:
           type: string
-          description: Required for non Mobile Phones, if field is present and refers to Australian code - the leading `0` should be omitted.
-        number:
+          description: For people with single names, the single name should be in this field.
+        middleNames:
+          type: array
+          description: Field is mandatory but array may be empty.
+          items:
+            type: string
+        prefix:
           type: string
-          description: The actual phone number, with leading zeros as appropriate.
-        extension:
+          description: Also known as title or salutation. The prefix to the name (e.g., Mr, Mrs, Ms, Miss, Sir, etc.)
+        suffix:
           type: string
-          description: An extension number (if applicable).
-        fullNumber:
+          description: Used for a trailing suffix to the name (e.g., Jr.)
+        occupationCode:
           type: string
-          description: Fully formatted phone number with country code, area code, number and extension incorporated. Formatted according to section 5.1.4. of **[[RFC3966]](#iref-RFC3966)**.
+          description: Value is a valid **[[ANZSCO]](#iref-ANZSCO)** Standard Occupation classification code. If the occupation code held by the data holder is not one of the supported **[[ANZSCO]](#iref-ANZSCO)** versions, then it must not be supplied.
           x-cds-type: ExternalRef
+        occupationCodeVersion:
+          type: string
+          description: The applicable **[[ANZSCO]](#iref-ANZSCO)** release version of the occupation code provided. Mandatory if an _occupationCode_ is supplied. If _occupationCode_ is supplied but _occupationCodeVersion_ is absent, default is `ANZSCO_1220.0_2013_V1.2`.
+          default: ANZSCO_1220.0_2013_V1.2
+          enum:
+          - ANZSCO_1220.0_2006_V1.0
+          - ANZSCO_1220.0_2006_V1.1
+          - ANZSCO_1220.0_2013_V1.2
+          - ANZSCO_1220.0_2013_V1.3
       x-conditional:
-      - areaCode
-    Meta:
+      - occupationCodeVersion
+    ResponseCommonCustomer:
+      required:
+      - data
+      - links
       type: object
+      properties:
+        data:
+          required:
+          - customerUType
+          type: object
+          properties:
+            customerUType:
+              type: string
+              description: The type of customer object that is present.
+              enum:
+              - organisation
+              - person
+            person:
+              $ref: '#/components/schemas/CommonPerson'
+            organisation:
+              $ref: '#/components/schemas/CommonOrganisation'
+          x-conditional:
+          - person
+          - organisation
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
     CommonOrganisation:
       required:
       - agentLastName
@@ -288,6 +304,35 @@ components:
           x-cds-type: DateString
       x-conditional:
       - industryCodeVersion
+    Links:
+      required:
+      - self
+      type: object
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+    Meta:
+      type: object
+    CommonPhysicalAddress:
+      required:
+      - addressUType
+      type: object
+      properties:
+        addressUType:
+          type: string
+          description: The type of address object present.
+          enum:
+          - paf
+          - simple
+        simple:
+          $ref: '#/components/schemas/CommonSimpleAddress'
+        paf:
+          $ref: '#/components/schemas/CommonPAFAddress'
+      x-conditional:
+      - simple
+      - paf
     CommonSimpleAddress:
       description: Required if _addressUType_ is set to `simple`.
       required:
@@ -324,211 +369,6 @@ components:
           x-cds-type: ExternalRef
       x-conditional:
       - postcode
-    CommonEmailAddress:
-      required:
-      - address
-      - purpose
-      type: object
-      properties:
-        isPreferred:
-          type: boolean
-          description: May be `true` for one and only one email record in the collection. Denotes the default email address.
-        purpose:
-          type: string
-          description: The purpose for the email, as specified by the customer.
-          enum:
-          - HOME
-          - OTHER
-          - UNSPECIFIED
-          - WORK
-        address:
-          type: string
-          description: A correctly formatted email address, as defined by the addr-spec format in **[[RFC5322]](#nref-RFC5322)**.
-          x-cds-type: ExternalRef
-    Links:
-      required:
-      - self
-      type: object
-      properties:
-        self:
-          type: string
-          description: Fully qualified link that generated the current response document.
-          x-cds-type: URIString
-    ErrorV2:
-      type: object
-      required:
-      - code
-      - title
-      - detail
-      x-conditional:
-      - meta
-      properties:
-        code:
-          type: string
-          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
-        title:
-          type: string
-          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
-        detail:
-          type: string
-          description: A human-readable explanation specific to this occurrence of the problem.
-        meta:
-          type: object
-          x-conditional:
-          - urn
-          description: Additional data for customised error codes.
-          properties:
-            urn:
-              type: string
-              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
-    ResponseCommonCustomerDetailV2:
-      required:
-      - data
-      - links
-      type: object
-      properties:
-        data:
-          required:
-          - customerUType
-          type: object
-          properties:
-            customerUType:
-              type: string
-              description: The type of customer object that is present.
-              enum:
-              - organisation
-              - person
-            person:
-              $ref: '#/components/schemas/CommonPersonDetailV2'
-            organisation:
-              $ref: '#/components/schemas/CommonOrganisationDetailV2'
-          x-conditional:
-          - person
-          - organisation
-        links:
-          $ref: '#/components/schemas/Links'
-        meta:
-          $ref: '#/components/schemas/Meta'
-    ResponseErrorListV2:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          description: List of errors.
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorV2'
-    CommonPhysicalAddressWithPurpose:
-      allOf:
-      - $ref: '#/components/schemas/CommonPhysicalAddress'
-      - required:
-        - purpose
-        type: object
-        properties:
-          purpose:
-            type: string
-            description: Enumeration of values indicating the purpose of the physical address.
-            enum:
-            - MAIL
-            - OTHER
-            - PHYSICAL
-            - REGISTERED
-            - WORK
-    CommonPerson:
-      required:
-      - lastName
-      - middleNames
-      type: object
-      properties:
-        lastUpdateTime:
-          type: string
-          description: The date and time that this record was last updated by the customer. If no update has occurred then this date should reflect the initial creation date for the data.
-          x-cds-type: DateTimeString
-        firstName:
-          type: string
-          description: For people with single names this field need not be present. The single name should be in the _lastName_ field. Where a data holder cannot determine first and middle names from a collection of given names, a single string representing all given names **MAY** be provided.
-        lastName:
-          type: string
-          description: For people with single names, the single name should be in this field.
-        middleNames:
-          type: array
-          description: Field is mandatory but array may be empty.
-          items:
-            type: string
-        prefix:
-          type: string
-          description: Also known as title or salutation. The prefix to the name (e.g., Mr, Mrs, Ms, Miss, Sir, etc.)
-        suffix:
-          type: string
-          description: Used for a trailing suffix to the name (e.g., Jr.)
-        occupationCode:
-          type: string
-          description: Value is a valid **[[ANZSCO]](#iref-ANZSCO)** Standard Occupation classification code. If the occupation code held by the data holder is not one of the supported **[[ANZSCO]](#iref-ANZSCO)** versions, then it must not be supplied.
-          x-cds-type: ExternalRef
-        occupationCodeVersion:
-          type: string
-          description: The applicable **[[ANZSCO]](#iref-ANZSCO)** release version of the occupation code provided. Mandatory if an _occupationCode_ is supplied. If _occupationCode_ is supplied but _occupationCodeVersion_ is absent, default is `ANZSCO_1220.0_2013_V1.2`.
-          default: ANZSCO_1220.0_2013_V1.2
-          enum:
-          - ANZSCO_1220.0_2006_V1.0
-          - ANZSCO_1220.0_2006_V1.1
-          - ANZSCO_1220.0_2013_V1.2
-          - ANZSCO_1220.0_2013_V1.3
-      x-conditional:
-      - occupationCodeVersion
-    ResponseCommonCustomer:
-      required:
-      - data
-      - links
-      type: object
-      properties:
-        data:
-          required:
-          - customerUType
-          type: object
-          properties:
-            customerUType:
-              type: string
-              description: The type of customer object that is present.
-              enum:
-              - organisation
-              - person
-            person:
-              $ref: '#/components/schemas/CommonPerson'
-            organisation:
-              $ref: '#/components/schemas/CommonOrganisation'
-          x-conditional:
-          - person
-          - organisation
-        links:
-          $ref: '#/components/schemas/Links'
-        meta:
-          $ref: '#/components/schemas/Meta'
-    CommonPersonDetailV2:
-      allOf:
-      - $ref: '#/components/schemas/CommonPerson'
-      - required:
-        - emailAddresses
-        - phoneNumbers
-        - physicalAddresses
-        type: object
-        properties:
-          phoneNumbers:
-            type: array
-            description: Array is mandatory but may be empty if no phone numbers are held.
-            items:
-              $ref: '#/components/schemas/CommonPhoneNumber'
-          emailAddresses:
-            type: array
-            description: May be empty.
-            items:
-              $ref: '#/components/schemas/CommonEmailAddress'
-          physicalAddresses:
-            type: array
-            description: Array is mandatory but may be empty if no valid addresses are held. One and only one address may have the purpose of `REGISTERED`. Zero or one, and no more than one, record may have the purpose of `MAIL`. If zero then the `REGISTERED` address is to be used for mail.
-            items:
-              $ref: '#/components/schemas/CommonPhysicalAddressWithPurpose'
     CommonPAFAddress:
       required:
       - localityName
@@ -606,6 +446,114 @@ components:
           type: string
           description: State in which the address belongs. Valid enumeration defined by Australia Post PAF code file [State Type Abbreviation](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf). `NSW`, `QLD`, `VIC`, `NT`, `WA`, `SA`, `TAS`, `ACT`, `AAT`.
       description: Australian address formatted according to the file format defined by the [PAF file format](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf). Required if _addressUType_ is set to `paf`.
+    CommonPersonDetailV2:
+      allOf:
+      - $ref: '#/components/schemas/CommonPerson'
+      - required:
+        - emailAddresses
+        - phoneNumbers
+        - physicalAddresses
+        type: object
+        properties:
+          phoneNumbers:
+            type: array
+            description: Array is mandatory but may be empty if no phone numbers are held.
+            items:
+              $ref: '#/components/schemas/CommonPhoneNumber'
+          emailAddresses:
+            type: array
+            description: May be empty.
+            items:
+              $ref: '#/components/schemas/CommonEmailAddress'
+          physicalAddresses:
+            type: array
+            description: Array is mandatory but may be empty if no valid addresses are held. One and only one address may have the purpose of `REGISTERED`. Zero or one, and no more than one, record may have the purpose of `MAIL`. If zero then the `REGISTERED` address is to be used for mail.
+            items:
+              $ref: '#/components/schemas/CommonPhysicalAddressWithPurpose'
+    CommonPhysicalAddressWithPurpose:
+      allOf:
+      - $ref: '#/components/schemas/CommonPhysicalAddress'
+      - required:
+        - purpose
+        type: object
+        properties:
+          purpose:
+            type: string
+            description: Enumeration of values indicating the purpose of the physical address.
+            enum:
+            - MAIL
+            - OTHER
+            - PHYSICAL
+            - REGISTERED
+            - WORK
+    ResponseCommonCustomerDetailV2:
+      required:
+      - data
+      - links
+      type: object
+      properties:
+        data:
+          required:
+          - customerUType
+          type: object
+          properties:
+            customerUType:
+              type: string
+              description: The type of customer object that is present.
+              enum:
+              - organisation
+              - person
+            person:
+              $ref: '#/components/schemas/CommonPersonDetailV2'
+            organisation:
+              $ref: '#/components/schemas/CommonOrganisationDetailV2'
+          x-conditional:
+          - person
+          - organisation
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+    CommonPhoneNumber:
+      required:
+      - fullNumber
+      - number
+      - purpose
+      type: object
+      properties:
+        isPreferred:
+          type: boolean
+          description: May be `true` for one and only one entry to indicate the preferred phone number. Assumed to be `false` if not present.
+          default: false
+        purpose:
+          type: string
+          description: The purpose of the number as specified by the customer.
+          enum:
+          - HOME
+          - INTERNATIONAL
+          - MOBILE
+          - OTHER
+          - UNSPECIFIED
+          - WORK
+        countryCode:
+          type: string
+          description: If absent, assumed to be Australia (`+61`). The `+` should be included.
+          default: '+61'
+        areaCode:
+          type: string
+          description: Required for non Mobile Phones, if field is present and refers to Australian code - the leading `0` should be omitted.
+        number:
+          type: string
+          description: The actual phone number, with leading zeros as appropriate.
+        extension:
+          type: string
+          description: An extension number (if applicable).
+        fullNumber:
+          type: string
+          description: Fully formatted phone number with country code, area code, number and extension incorporated. Formatted according to section 5.1.4. of **[[RFC3966]](#iref-RFC3966)**.
+          x-cds-type: ExternalRef
+      x-conditional:
+      - areaCode
   responses:
     GetCustomer400:
       description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
@@ -616,17 +564,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseErrorListV2'
-    GetCustomerDetail200:
-      description: Successful response
+    GetCustomer406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
       headers:
-        x-v:
-          $ref: '#/components/headers/XV'
         x-fapi-interaction-id:
           $ref: '#/components/headers/XFAPIInteractionId'
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResponseCommonCustomerDetailV2'
+            $ref: '#/components/schemas/ResponseErrorListV2'
+    GetCustomerDetail400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+      headers:
+        x-fapi-interaction-id:
+          $ref: '#/components/headers/XFAPIInteractionId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseErrorListV2'
     GetCustomerDetail406:
       description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
       headers:
@@ -647,21 +602,66 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseCommonCustomer'
-    GetCustomer406:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+    GetCustomerDetail200:
+      description: Successful response
       headers:
+        x-v:
+          $ref: '#/components/headers/XV'
         x-fapi-interaction-id:
           $ref: '#/components/headers/XFAPIInteractionId'
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    GetCustomerDetail400:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
-      headers:
-        x-fapi-interaction-id:
-          $ref: '#/components/headers/XFAPIInteractionId'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
+            $ref: '#/components/schemas/ResponseCommonCustomerDetailV2'
+  parameters:
+    HeaderXMinV:
+      name: x-min-v
+      in: header
+      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
+      schema:
+        type: string
+    HeaderXFAPIAuthDate:
+      name: x-fapi-auth-date
+      in: header
+      description: The time when the customer last logged in to the Data Recipient Software Product as described in **[[FAPI-1.0-Baseline]](#nref-FAPI-1-0-Baseline)**. Required for all resource calls (customer present and unattended). Not required for unauthenticated calls.
+      schema:
+        type: string
+      x-conditional: true
+    HeaderXV:
+      name: x-v
+      in: header
+      description: Version of the API endpoint requested by the client. Must be set to a positive integer. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If the value of [_x-min-v_](#request-headers) is equal to or higher than the value of [_x-v_](#request-headers) then the [_x-min-v_](#request-headers) header should be treated as absent. If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`. See [HTTP Headers](#request-headers).
+      required: true
+      schema:
+        type: string
+    HeaderXCDSClientHeaders:
+      name: x-cds-client-headers
+      in: header
+      description: The customer's original standard http headers [Base64](#common-field-types) encoded, including the original User-Agent header, if the customer is currently logged in to the Data Recipient Software Product. Mandatory for customer present calls. Not required for unattended or unauthenticated calls.
+      schema:
+        type: string
+      x-conditional: true
+      x-cds-type: Base64
+    HeaderXFAPIInteractionId:
+      name: x-fapi-interaction-id
+      in: header
+      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
+      schema:
+        type: string
+    HeaderXFAPICustomerIPAddress:
+      name: x-fapi-customer-ip-address
+      in: header
+      description: The customer's original IP address if the customer is currently logged in to the Data Recipient Software Product. The presence of this header indicates that the API is being called in a customer present context. Not to be included for unauthenticated calls.
+      schema:
+        type: string
+  headers:
+    XV:
+      description: The [payload version](#response-headers) that the endpoint has responded with.
+      required: true
+      schema:
+        type: string
+    XFAPIInteractionId:
+      description: An **[[RFC4122]](#nref-RFC4122)** UUID used as a correlation id. If provided, the data holder **MUST** play back this value in the _x-fapi-interaction-id_ response header. If not provided a **[[RFC4122]](#nref-RFC4122)** UUID value is required to be provided in the response header to track the interaction.
+      required: true
+      schema:
+        type: string

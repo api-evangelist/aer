@@ -61,20 +61,6 @@ paths:
           $ref: '#/components/responses/GetOutages406'
       x-version: '1'
 components:
-  parameters:
-    HeaderXMinV:
-      name: x-min-v
-      in: header
-      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
-      schema:
-        type: string
-    HeaderXV:
-      name: x-v
-      in: header
-      description: Version of the API endpoint requested by the client. Must be set to a positive integer. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If the value of [_x-min-v_](#request-headers) is equal to or higher than the value of [_x-v_](#request-headers) then the [_x-min-v_](#request-headers) header should be treated as absent. If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`. See [HTTP Headers](#request-headers).
-      required: true
-      schema:
-        type: string
   headers:
     XV:
       description: The [payload version](#response-headers) that the endpoint has responded with.
@@ -82,16 +68,6 @@ components:
       schema:
         type: string
   schemas:
-    ResponseErrorListV2:
-      type: object
-      required:
-      - errors
-      properties:
-        errors:
-          description: List of errors.
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorV2'
     ResponseDiscoveryOutagesList:
       required:
       - data
@@ -112,6 +88,42 @@ components:
           $ref: '#/components/schemas/Links'
         meta:
           $ref: '#/components/schemas/Meta'
+    Links:
+      required:
+      - self
+      type: object
+      properties:
+        self:
+          type: string
+          description: Fully qualified link that generated the current response document.
+          x-cds-type: URIString
+    ErrorV2:
+      type: object
+      required:
+      - code
+      - title
+      - detail
+      x-conditional:
+      - meta
+      properties:
+        code:
+          type: string
+          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        meta:
+          type: object
+          x-conditional:
+          - urn
+          description: Additional data for customised error codes.
+          properties:
+            urn:
+              type: string
+              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
     ResponseCommonDiscoveryStatus:
       required:
       - data
@@ -176,45 +188,19 @@ components:
           description: Provides an explanation of the current outage that can be displayed to an end customer.
     Meta:
       type: object
-    Links:
-      required:
-      - self
-      type: object
-      properties:
-        self:
-          type: string
-          description: Fully qualified link that generated the current response document.
-          x-cds-type: URIString
-    ErrorV2:
+    ResponseErrorListV2:
       type: object
       required:
-      - code
-      - title
-      - detail
-      x-conditional:
-      - meta
+      - errors
       properties:
-        code:
-          type: string
-          description: The code of the error encountered. Where the error is specific to the respondent, an application-specific error code, expressed as a string value. If the error is application-specific, the URN code that the specific error extends must be provided in the _meta_ object. Otherwise, the value is the error code URN.
-        title:
-          type: string
-          description: A short, human-readable summary of the problem that **MUST NOT** change from occurrence to occurrence of the problem represented by the error code.
-        detail:
-          type: string
-          description: A human-readable explanation specific to this occurrence of the problem.
-        meta:
-          type: object
-          x-conditional:
-          - urn
-          description: Additional data for customised error codes.
-          properties:
-            urn:
-              type: string
-              description: The CDR error code URN which the application-specific error code extends. Mandatory if the error _code_ is an application-specific error rather than a standardised error code.
+        errors:
+          description: List of errors.
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorV2'
   responses:
-    GetOutages400:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
+    GetOutages406:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
       content:
         application/json:
           schema:
@@ -228,13 +214,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseDiscoveryOutagesList'
-    GetOutages406:
-      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[406 - Unsupported Version](#error-406-header-unsupported-version)</li></ul>
+    GetStatus200:
+      description: Successful response
+      headers:
+        x-v:
+          $ref: '#/components/headers/XV'
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResponseErrorListV2'
-    GetStatus400:
+            $ref: '#/components/schemas/ResponseCommonDiscoveryStatus'
+    GetOutages400:
       description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
       content:
         application/json:
@@ -246,12 +235,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseErrorListV2'
-    GetStatus200:
-      description: Successful response
-      headers:
-        x-v:
-          $ref: '#/components/headers/XV'
+    GetStatus400:
+      description: The following error codes **MUST** be supported:<br/><ul class="error-code-list"><li>[400 - Invalid Field](#error-400-field-invalid)</li><li>[400 - Missing Required Field](#error-400-field-missing)</li><li>[400 - Invalid Version](#error-400-header-invalid-version)</li></ul>
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResponseCommonDiscoveryStatus'
+            $ref: '#/components/schemas/ResponseErrorListV2'
+  parameters:
+    HeaderXV:
+      name: x-v
+      in: header
+      description: Version of the API endpoint requested by the client. Must be set to a positive integer. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If the value of [_x-min-v_](#request-headers) is equal to or higher than the value of [_x-v_](#request-headers) then the [_x-min-v_](#request-headers) header should be treated as absent. If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`. See [HTTP Headers](#request-headers).
+      required: true
+      schema:
+        type: string
+    HeaderXMinV:
+      name: x-min-v
+      in: header
+      description: Minimum version of the API endpoint requested by the client. Must be set to a positive integer if provided. The endpoint should respond with the highest supported version between [_x-min-v_](#request-headers) and [_x-v_](#request-headers). If all versions requested are not supported then the endpoint **MUST** respond with a `406 Not Acceptable`.
+      schema:
+        type: string
