@@ -1,4 +1,4 @@
-# Australian Energy Regulator (aer)
+# Australian Energy Regulator
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,118 +66,126 @@
 
 The Australian Energy Regulator (AER) is the independent national economic regulator of Australia's energy markets, established under the Competition and Consumer Act 2010 and operating alongside the ACCC. It sets network revenues and prices, enforces the National Electricity, Gas and Energy Retail Rules, monitors wholesale and retail market conduct, sets the Default Market Offer, keeps the public registers of authorised retailers and exemptions, and operates Energy Made Easy, the government price-comparison service. Its API posture is the strongest found among Australian energy regulators and it is genuinely implemented rather than merely mandated. The AER is a designated data holder under the Competition and Consumer (Consumer Data Right) Rules 2020 and it serves the Consumer Data Standards energy Product Reference Data endpoints — Get Generic Plans and Get Generic Plan Detail — anonymously, with no accreditation, no API key and no signup, returning live retail plan, tariff, fee, discount and eligibility data for the six jurisdictions that adopted the National Energy Customer Framework. Verified on 2026-07-27, 79 of the 84 energy data-holder brands in the ACCC CDR Register point their productBaseUri at the AER's own host, cdr.energymadeeasy.gov.au, which makes the regulator the actual operator of the product-data API layer for nearly the whole Australian retail energy industry. The split matters: the AER's open surface is product and tariff data only. It holds and exposes no individual consumer usage or billing data — the CDR consumer endpoints 404 on its host — because those flow from retailers as primary data holders and AEMO as the secondary data holder gateway, behind ACCC accreditation, OAuth2/OIDC and mTLS. The AER's own market statistics, wholesale performance reporting and public registers are published as web pages, charts and document downloads, not as an API, and no developer., developers., api., docs. or data. subdomain resolves.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/aer/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/aer/refs/heads/main/apis.yml)
+**Areas:** Energy · Australia · Utilities · Electricity · Gas · Energy Markets · Consumer Data Right · Retail Energy · Regulations · Government · Open Data · Smart Metering
 
-## Tags
+## Australian Energy Regulator on APIs.io
 
-- Energy
-- Australia
-- Utilities
-- Electricity
-- Gas
-- Energy Markets
-- Consumer Data Right
-- Retail Energy
-- Regulation
-- Government
-- Open Data
-- Smart Metering
+Everything profiled for Australian Energy Regulator is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/aer/](https://apis.io/providers/aer/)** — or go straight to one of the APIs or properties below.
 
-## Timestamps
+### APIs (9)
 
-- **Created:** 2026-07-27
-- **Modified:** 2026-07-27
+- [Australian Energy Regulator Data Holder Customers API](https://apis.io/apis/aer/aer-data-holder-customers-api/) — Data Holder Customer endpoints
+- [Australian Energy Regulator Data Holder Operations API](https://apis.io/apis/aer/aer-data-holder-operations-api/) — Data Holder Operations endpoints
+- [Australian Energy Regulator Distributed Energy Resources API](https://apis.io/apis/aer/aer-distributed-energy-resources-api/) — Distributed Energy Resource endpoints
+- [Australian Energy Regulator Electricity Service Points API](https://apis.io/apis/aer/aer-electricity-service-points-api/) — Electricity Service Point endpoints
+- [Australian Energy Regulator Electricity Usage API](https://apis.io/apis/aer/aer-electricity-usage-api/) — Electricity Usage endpoints
+- [Australian Energy Regulator Energy Account Balances API](https://apis.io/apis/aer/aer-energy-account-balances-api/) — Energy Account Balance endpoints
+- [Australian Energy Regulator Energy Account Billing API](https://apis.io/apis/aer/aer-energy-account-billing-api/) — Energy Account Billing endpoints
+- [Australian Energy Regulator Energy Accounts API](https://apis.io/apis/aer/aer-energy-accounts-api/) — Energy Account endpoints
+- [Australian Energy Regulator Energy Plans API](https://apis.io/apis/aer/aer-energy-plans-api/) — Energy Plan endpoints
 
-## APIs
+### Published properties
 
-### AER Energy Product Reference Data - Get Generic Plans
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-Anonymous, unaccredited Consumer Data Right energy Product Reference Data endpoint operated by the AER. Returns a paged summary of all current, generally available retail energy plans for one retailer brand, covering plan name, fuel type, brand, distributor and postcode geography, plan type and effective dates. The retailer brand is a path segment taken from the AER's published list of CDR energy base URIs — for example `https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans?type=ALL`, which returned HTTP 200 with 1,343 AGL plans on 2026-07-27. Requires the `x-v` request header; only version 1 is supported and any other value returns 406. Default page size is 25, maximum 1000. There is no Australia-wide call — one request per retailer brand.
+#### MCP servers (1)
 
-- **Human URL:** [https://www.aer.gov.au/energy-product-reference-data](https://www.aer.gov.au/energy-product-reference-data)
-- **Base URL:** `https://cdr.energymadeeasy.gov.au/agl/cds-au/v1`
+Model Context Protocol servers that expose the API to agents.
 
-#### Tags
+- [aer-energy-prd](https://apis.io/servers/aer/aer-energy-prd/)
 
-- Energy
-- Consumer Data Right
-- Product Reference Data
-- Electricity
-- Gas
-- Tariffs
+#### Collections (2)
 
-#### Properties
+Postman and Open Collection request collections.
 
-- [Documentation](https://www.aer.gov.au/energy-product-reference-data)
-- [API Reference](https://consumerdatastandardsaustralia.github.io/standards/index.html#get-generic-plans)
-- [OpenAPI](openapi/cdr-energy-api-openapi.json) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Specification](https://consumerdatastandardsaustralia.github.io/standards/)
-- [Documentation](https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands)
-- [Documentation](https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data)
-- [Registry](https://api.cdr.gov.au/cdr-register/v1/energy/data-holders/brands/summary)
+- [CDR Energy API](https://apis.io/collections/aer/open-cdr-energy-api/)
+- [CDR Common API](https://apis.io/collections/aer/open-cds-common-api/)
 
-### AER Energy Product Reference Data - Get Generic Plan Detail
+#### Overlays (2)
 
-Anonymous, unaccredited Consumer Data Right energy Product Reference Data endpoint operated by the AER. Returns the full detail of a single current, generally available retail energy plan by plan identifier — tariff structures, metering charges, contract terms, incentives, discounts, fees, solar feed-in and eligibility. Version 3 is the supported version; version 2 was retired on 3 March 2025 and requests with `x-v` other than 3 return 406. Verified 2026-07-27 with `GET https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/energy/plans/AGL1067320MRE2@EME` and header `x-v: 3`, HTTP 200.
+OpenAPI overlays, including conversational phrasing for each operation.
 
-- **Human URL:** [https://www.aer.gov.au/energy-product-reference-data](https://www.aer.gov.au/energy-product-reference-data)
-- **Base URL:** `https://cdr.energymadeeasy.gov.au/agl/cds-au/v1`
+- [Aer Cdr Energy Api Overlay](https://apis.io/overlays/aer/aer-cdr-energy-api-overlay/)
+- [Aer Cds Common Api Overlay](https://apis.io/overlays/aer/aer-cds-common-api-overlay/)
 
-#### Tags
+#### Security (3)
 
-- Energy
-- Consumer Data Right
-- Product Reference Data
-- Tariffs
-- Electricity
-- Gas
+Authentication, trust centre, and vulnerability disclosure.
 
-#### Properties
+- [Aer Authentication](https://apis.io/security/aer/aer-authentication/)
+- [Aer Domain Security](https://apis.io/security/aer/aer-domain-security/)
+- [Aer Vulnerability Disclosure](https://apis.io/security/aer/aer-vulnerability-disclosure/)
 
-- [Documentation](https://www.aer.gov.au/energy-product-reference-data)
-- [API Reference](https://consumerdatastandardsaustralia.github.io/standards/#cdr-energy-api_get-generic-plan-detail)
-- [OpenAPI](openapi/cdr-energy-api-openapi.json) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Specification](https://consumerdatastandardsaustralia.github.io/standards/)
-- [Documentation](https://www.aer.gov.au/documents/consumer-data-right-energy-retailer-base-uris-and-cdr-brands)
+#### Rate limits (1)
 
-## Common Properties
+Published request limits.
+
+- [Aer Rate Limits](https://apis.io/rate-limits/aer/aer-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
 
 - [Website](https://www.aer.gov.au/)
-- [About](https://www.aer.gov.au/about)
-- [Contact](https://www.aer.gov.au/about/contact-us)
 - [Documentation](https://www.aer.gov.au/energy-product-reference-data)
-- [API Reference](https://consumerdatastandardsaustralia.github.io/standards/)
-- [Registers](https://www.aer.gov.au/industry/registers)
-- [Registers](https://www.aer.gov.au/industry/registers/authorisations)
-- [Data Portal](https://www.aer.gov.au/industry/registers/charts)
-- [Reports](https://www.aer.gov.au/industry/wholesale/performance)
-- [Website](https://www.energymadeeasy.gov.au/)
+- [Getting started](https://www.aer.gov.au/documents/fact-sheet-accessing-energy-product-reference-data)
+- [API reference](https://consumerdatastandardsaustralia.github.io/standards/)
+- [Support](https://www.aer.gov.au/about/contact-us)
 - [Blog](https://www.aer.gov.au/news)
-- [RSS](https://www.aer.gov.au/rss.xml)
-- [Regulation](https://www.cdr.gov.au/)
+- [Security](https://www.aer.gov.au/.well-known/security.txt)
+- [Terms of service](https://www.aer.gov.au/about/policies/disclaimer-copyright)
+- [Privacy policy](https://www.aer.gov.au/about/policies/privacy)
+- [Status](https://cdr.energymadeeasy.gov.au/agl/cds-au/v1/discovery/status)
 
-## Maintainers
+## API Evangelist rating
 
-- **Kin Lane** — kin@apievangelist.com
+**Kin Score 40.8** — developing · rubric 0.24.0 · scored 2026-10-17
 
-## Artifacts
+| Facet | Score |
+|---|---|
+| Discoverability | 66.1 |
+| Contract quality | 44.7 |
+| Contract governance | 18.2 |
+| Operational transparency | 68.4 |
+| Developer ergonomics | 35.1 |
+| Access clarity | 18.4 |
 
-Enrichment round 2026-07-27 (search → generate → derive; every claim probed live or cited):
+**Agent readiness 21.8** — agent-aware
 
-- `openapi/` — CDR Energy API 1.36.0 and CDR Common API 1.36.0 (both DSB-authored, harvested verbatim)
-- `overlays/` — what is true of the **AER's deployment** of those two specs (which operations are served, at which versions, on which real host)
-- `authentication/` — the anonymous model plus the mandatory `x-v` / optional `x-min-v` header contract
-- `conventions/` — base-URI shape, version negotiation, paging, envelope, tracing, CORS (no idempotency: the surface is read-only)
-- `errors/` — the CDS `urn:au-cds:error:` catalogue, captured from live 400/404/406 responses
-- `lifecycle/` — endpoint version schedule with real deprecation and retirement dates, CDS SLA, and the machine-readable status endpoint
-- `rate-limits/` — the CDS Non-Functional Requirements the AER's own FAQ adopts (300 TPS public traffic, 1500ms/95%, 99.5% availability)
-- `conformance/` — what the AER conforms to and, just as usefully, what it does not (no OAuth, no RFC 9457, no Green Button/IEEE 2030.5/CIM)
-- `data-model/` — the plan entity graph derived from the specification's `$ref` tree
-- `changelog/` — AER version notices plus DSB standards releases
-- `well-known/` + `security/` — RFC 9116 `security.txt` (contact only, no policy), TLS/DNS posture
-- `mcp/` — a **candidate** tool surface and its crosswalk to real `operationId`s (the AER publishes no MCP server)
-- `skills/`, `llms/` — generated agent operating instructions and an `llms.txt` (the AER publishes neither)
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | — |
+| MCP Server | — |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | — |
+| Error Semantics | documented (partial credit) |
+| OpenAPI Examples | — |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
 
-## Notes
+**Regulatory alignment 26.2** — Energy & Utilities
 
-The specifications in `openapi/` are the Data Standards Body's **CDR Energy API 1.36.0** and **CDR Common API 1.36.0**, harvested verbatim from the Consumer Data Standards repository on 2026-07-27. It is the contract the AER serves, not a specification the AER publishes — the AER publishes none. The AER implements only the two `/energy/plans` operations from the energy spec, plus the two anonymous `/discovery/status` and `/discovery/outages` operations from the common spec — verified live on 2026-07-27, and the closest thing the AER has to a status page. The account, billing, service point, usage and distributed-energy-resource paths belong to retailers and AEMO and return 404 on the AER's host. See `review.yml` for the full mandate, access-gate and provenance record.
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/aer/](https://apis.io/providers/aer/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Australian Energy Regulator: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/aer/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
